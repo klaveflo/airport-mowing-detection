@@ -1,0 +1,17 @@
+# Data
+data/
+
+# Notes from meetings
+meetings/
+
+# Organisational matters
+organisation/
+
+# safed models
+/models/
+
+# Word documents
+*.docx
+
+/.quarto/
+**/*.quarto_ipynb
