@@ -2,7 +2,7 @@
 **Author:** Florian Klaver
 
 ## General Information
-This GitHub repository contains the code and scientific report for the projectwork 2 conducted during the 5. semester in the Applied Digital Life Sciences Bachelor at ZAHW. This project assesses the feasibility of automating grassland monitoring at Zurich Airport using open-source Sentinel-2 satellite imagery and Machine Learning. Effective mowing management is crucial for minimizing wildlife hazards and reducing the risk of bird strikes.
+This GitHub repository contains the code and scientific report for the projectwork 2 conducted during the 5. semester in the Applied Digital Life Sciences Bachelor at ZAHW. This project assesses the feasibility of automating grassland monitoring at Zurich Airport using open-source Sentinel-2 satellite imagery and Machine Learning.
 
 The report can be found in the `docs` folder as Quarto document, rendered PDF or HTML-file. All relevant code is located in the `code` folder.
 
