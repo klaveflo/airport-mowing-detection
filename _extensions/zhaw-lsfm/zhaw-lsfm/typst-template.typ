@@ -89,7 +89,7 @@
       #align(center)[
         #if lang == "en" [
           ZURICH UNIVERSITY OF APPLIED SCIENCES \
-          DEPARTEMENT LIFE SCIENCES AND FACILITY MANAGEMENT
+          DEPARTMENT LIFE SCIENCES AND FACILITY MANAGEMENT
         ] else [
           ZÜRCHER HOCHSCHULE FÜR ANGEWANDTE WISSENSCHAFTEN \
           DEPARTEMENT LIFE SCIENCES UND FACILITY MANAGEMENT
@@ -102,7 +102,7 @@
       #if title != none {
         align(center)[#block(inset: 2em)[
           #set par(leading: heading-line-height)
-          #text(weight: "bold", size: title-size)[#title]
+          #text(weight: "bold", size: title-size, hyphenate: false)[#title]
           #if subtitle != none {
             parbreak()
             text(weight: "bold", size: subtitle-size)[#subtitle]
