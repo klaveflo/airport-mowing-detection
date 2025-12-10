@@ -11,7 +11,7 @@ The ground-truth data used in this project for model training and evaluation is 
 The workflow is fully resuable with own data and can easily be adjusted for new projects thanks to the usage of modular functions and parameter definitions at the start of each notebook.
 
 ## Usage
-To reuse this workflow, just clone the repository and create an environment with the requirements `requirements.yml`:
+To reuse this workflow, just clone the repository and create an environment with the requirements `environment.yml`:
 
 ```bash
 # Conda environment
