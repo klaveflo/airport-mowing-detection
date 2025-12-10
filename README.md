@@ -4,7 +4,7 @@
 ## General Information
 This GitHub repository contains the code and scientific report for the projectwork 2 conducted during the 5. semester in the Applied Digital Life Sciences Bachelor at ZAHW. This project assesses the feasibility of automating grassland monitoring at Zurich Airport using open-source Sentinel-2 satellite imagery and Machine Learning.
 
-The report can be found in the `docs` folder as Quarto document, rendered PDF or HTML-file. The webversion is available [here](https://klaveflo.github.io/airport-mowing-detection/). All relevant code is located in the `code` folder.
+The report (index) can be found in the `docs` folder as Quarto document, rendered PDF or HTML-file. The webversion is available [here](https://klaveflo.github.io/airport-mowing-detection/). All relevant code is located in the `code` folder.
 
 The ground-truth data used in this project for model training and evaluation is not provided, since it is confidential. The Sentinel-2 satellite data is openly available at the [Copernicus Browser](https://browser.dataspace.copernicus.eu/), additional geodata used for data cleaning can be found on the [Geoportal of the Canton of Zurich](https://geo.zh.ch/).
 
