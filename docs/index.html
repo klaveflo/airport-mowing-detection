@@ -1,0 +1,1921 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.24">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Florian Klaver">
+<meta name="keywords" content="Machine Learning, Remote Sensing, Sentinel-2, Vegetation Indices, Mowing Detection, Airport Management">
+
+<title>Satellite-Based Monitoring of Grassland Management</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"></script><script src="index_files/libs/clipboard/clipboard.min.js"></script>
+<script src="index_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="index_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="index_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="index_files/libs/quarto-html/popper.min.js"></script>
+<script src="index_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="index_files/libs/quarto-html/anchor.min.js"></script>
+<link href="index_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="index_files/libs/quarto-html/quarto-syntax-highlighting-dc55a5b9e770e841cd82e46aadbfb9b0.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="index_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="index_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="index_files/libs/bootstrap/bootstrap-4d7f0bce1131f3e5f9547cd857cfbfc8.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="https://cdn.jsdelivr.net/npm/requirejs@2.3.6/require.min.js" integrity="sha384-c9c+LnTbwQ3aujuU7ULEPVvgLs+Fn6fJUvIGTsuu1ZcCf11fiEubah0ttpca4ntM sha384-6V1/AdqZRWk1KAlWbKBlGhN7VG4iE/yAZcO6NZPMF8od0vukrvr0tg4qY6NSrItx" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#list-of-abbreviations" id="toc-list-of-abbreviations" class="nav-link active" data-scroll-target="#list-of-abbreviations">List of abbreviations</a></li>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction"><span class="header-section-number">1</span> Introduction</a>
+  <ul class="collapse">
+  <li><a href="#background-and-current-state-of-research" id="toc-background-and-current-state-of-research" class="nav-link" data-scroll-target="#background-and-current-state-of-research"><span class="header-section-number">1.1</span> Background and current state of research</a>
+  <ul class="collapse">
+  <li><a href="#spectral-response-of-managed-grassland" id="toc-spectral-response-of-managed-grassland" class="nav-link" data-scroll-target="#spectral-response-of-managed-grassland"><span class="header-section-number">1.1.1</span> Spectral Response of Managed Grassland</a></li>
+  <li><a href="#mowing-event-detection-strategies" id="toc-mowing-event-detection-strategies" class="nav-link" data-scroll-target="#mowing-event-detection-strategies"><span class="header-section-number">1.1.2</span> Mowing Event Detection Strategies</a></li>
+  <li><a href="#operational-challenges-optical-vs.-radar" id="toc-operational-challenges-optical-vs.-radar" class="nav-link" data-scroll-target="#operational-challenges-optical-vs.-radar"><span class="header-section-number">1.1.3</span> Operational Challenges: Optical vs.&nbsp;Radar</a></li>
+  </ul></li>
+  <li><a href="#problem-statement-and-research-gap" id="toc-problem-statement-and-research-gap" class="nav-link" data-scroll-target="#problem-statement-and-research-gap"><span class="header-section-number">1.2</span> Problem Statement and Research Gap</a></li>
+  <li><a href="#goal" id="toc-goal" class="nav-link" data-scroll-target="#goal"><span class="header-section-number">1.3</span> Goal</a></li>
+  </ul></li>
+  <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods"><span class="header-section-number">2</span> Methods</a>
+  <ul class="collapse">
+  <li><a href="#study-area-and-data-description" id="toc-study-area-and-data-description" class="nav-link" data-scroll-target="#study-area-and-data-description"><span class="header-section-number">2.1</span> Study Area and Data Description</a>
+  <ul class="collapse">
+  <li><a href="#study-area" id="toc-study-area" class="nav-link" data-scroll-target="#study-area"><span class="header-section-number">2.1.1</span> Study area</a></li>
+  <li><a href="#ground-truth-data" id="toc-ground-truth-data" class="nav-link" data-scroll-target="#ground-truth-data"><span class="header-section-number">2.1.2</span> Ground Truth Data</a></li>
+  <li><a href="#sentinel-2-satellite-imagery" id="toc-sentinel-2-satellite-imagery" class="nav-link" data-scroll-target="#sentinel-2-satellite-imagery"><span class="header-section-number">2.1.3</span> Sentinel-2 Satellite Imagery</a></li>
+  <li><a href="#additional-data-for-preprocessing" id="toc-additional-data-for-preprocessing" class="nav-link" data-scroll-target="#additional-data-for-preprocessing"><span class="header-section-number">2.1.4</span> Additional Data for Preprocessing</a></li>
+  </ul></li>
+  <li><a href="#data-preprocessing-and-mask-generation" id="toc-data-preprocessing-and-mask-generation" class="nav-link" data-scroll-target="#data-preprocessing-and-mask-generation"><span class="header-section-number">2.2</span> Data Preprocessing and Mask Generation</a>
+  <ul class="collapse">
+  <li><a href="#geometric-cleaning-of-ground-truth-polygons" id="toc-geometric-cleaning-of-ground-truth-polygons" class="nav-link" data-scroll-target="#geometric-cleaning-of-ground-truth-polygons"><span class="header-section-number">2.2.1</span> Geometric Cleaning of Ground Truth Polygons</a></li>
+  <li><a href="#satellite-data-standardization" id="toc-satellite-data-standardization" class="nav-link" data-scroll-target="#satellite-data-standardization"><span class="header-section-number">2.2.2</span> Satellite Data Standardization</a></li>
+  <li><a href="#label-generation-and-rasterization" id="toc-label-generation-and-rasterization" class="nav-link" data-scroll-target="#label-generation-and-rasterization"><span class="header-section-number">2.2.3</span> Label Generation and Rasterization</a></li>
+  </ul></li>
+  <li><a href="#feature-engineering" id="toc-feature-engineering" class="nav-link" data-scroll-target="#feature-engineering"><span class="header-section-number">2.3</span> Feature Engineering</a>
+  <ul class="collapse">
+  <li><a href="#temporal-matching-strategy" id="toc-temporal-matching-strategy" class="nav-link" data-scroll-target="#temporal-matching-strategy"><span class="header-section-number">2.3.1</span> Temporal Matching Strategy</a></li>
+  <li><a href="#spectral-indices-and-feature-calculation" id="toc-spectral-indices-and-feature-calculation" class="nav-link" data-scroll-target="#spectral-indices-and-feature-calculation"><span class="header-section-number">2.3.2</span> Spectral Indices and Feature Calculation</a></li>
+  <li><a href="#cloud-masking-and-sampling" id="toc-cloud-masking-and-sampling" class="nav-link" data-scroll-target="#cloud-masking-and-sampling"><span class="header-section-number">2.3.3</span> Cloud masking and Sampling</a></li>
+  </ul></li>
+  <li><a href="#machine-learning-modelling" id="toc-machine-learning-modelling" class="nav-link" data-scroll-target="#machine-learning-modelling"><span class="header-section-number">2.4</span> Machine Learning Modelling</a>
+  <ul class="collapse">
+  <li><a href="#feature-importance" id="toc-feature-importance" class="nav-link" data-scroll-target="#feature-importance"><span class="header-section-number">2.4.1</span> Feature Importance</a></li>
+  <li><a href="#data-splitting" id="toc-data-splitting" class="nav-link" data-scroll-target="#data-splitting"><span class="header-section-number">2.4.2</span> Data Splitting</a></li>
+  <li><a href="#model-architecture" id="toc-model-architecture" class="nav-link" data-scroll-target="#model-architecture"><span class="header-section-number">2.4.3</span> Model Architecture</a></li>
+  <li><a href="#hyperparameter-tuning-and-experimental-design" id="toc-hyperparameter-tuning-and-experimental-design" class="nav-link" data-scroll-target="#hyperparameter-tuning-and-experimental-design"><span class="header-section-number">2.4.4</span> Hyperparameter Tuning and Experimental Design</a></li>
+  <li><a href="#evaluation-metrics" id="toc-evaluation-metrics" class="nav-link" data-scroll-target="#evaluation-metrics"><span class="header-section-number">2.4.5</span> Evaluation Metrics</a></li>
+  </ul></li>
+  <li><a href="#model-application" id="toc-model-application" class="nav-link" data-scroll-target="#model-application"><span class="header-section-number">2.5</span> Model Application</a>
+  <ul class="collapse">
+  <li><a href="#test-scene-selection" id="toc-test-scene-selection" class="nav-link" data-scroll-target="#test-scene-selection"><span class="header-section-number">2.5.1</span> Test Scene Selection</a></li>
+  <li><a href="#application-pipeline" id="toc-application-pipeline" class="nav-link" data-scroll-target="#application-pipeline"><span class="header-section-number">2.5.2</span> Application Pipeline</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results"><span class="header-section-number">3</span> Results</a>
+  <ul class="collapse">
+  <li><a href="#model-evaluation-on-test-data" id="toc-model-evaluation-on-test-data" class="nav-link" data-scroll-target="#model-evaluation-on-test-data"><span class="header-section-number">3.1</span> Model Evaluation on Test Data</a>
+  <ul class="collapse">
+  <li><a href="#impact-of-feature-selection" id="toc-impact-of-feature-selection" class="nav-link" data-scroll-target="#impact-of-feature-selection"><span class="header-section-number">3.1.1</span> Impact of Feature Selection</a></li>
+  <li><a href="#hyperparameter-tuning-and-model-comparison" id="toc-hyperparameter-tuning-and-model-comparison" class="nav-link" data-scroll-target="#hyperparameter-tuning-and-model-comparison"><span class="header-section-number">3.1.2</span> Hyperparameter Tuning and Model Comparison</a></li>
+  <li><a href="#confusion-matrices-and-roc-curves" id="toc-confusion-matrices-and-roc-curves" class="nav-link" data-scroll-target="#confusion-matrices-and-roc-curves"><span class="header-section-number">3.1.3</span> Confusion Matrices and ROC Curves</a></li>
+  </ul></li>
+  <li><a href="#model-application-on-full-scene" id="toc-model-application-on-full-scene" class="nav-link" data-scroll-target="#model-application-on-full-scene"><span class="header-section-number">3.2</span> Model Application on Full Scene</a>
+  <ul class="collapse">
+  <li><a href="#spatial-and-quantitative-analysis" id="toc-spatial-and-quantitative-analysis" class="nav-link" data-scroll-target="#spatial-and-quantitative-analysis"><span class="header-section-number">3.2.1</span> Spatial and Quantitative Analysis</a></li>
+  <li><a href="#spectral-analysis-of-false-positives" id="toc-spectral-analysis-of-false-positives" class="nav-link" data-scroll-target="#spectral-analysis-of-false-positives"><span class="header-section-number">3.2.2</span> Spectral Analysis of False Positives</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#discussion" id="toc-discussion" class="nav-link" data-scroll-target="#discussion"><span class="header-section-number">4</span> Discussion</a>
+  <ul class="collapse">
+  <li><a href="#interpretation-of-model-performance" id="toc-interpretation-of-model-performance" class="nav-link" data-scroll-target="#interpretation-of-model-performance"><span class="header-section-number">4.1</span> Interpretation of Model performance</a>
+  <ul class="collapse">
+  <li><a href="#algorithm-selection-and-complexity" id="toc-algorithm-selection-and-complexity" class="nav-link" data-scroll-target="#algorithm-selection-and-complexity"><span class="header-section-number">4.1.1</span> Algorithm Selection and Complexity</a></li>
+  <li><a href="#superiority-of-moisture-sensitive-indices" id="toc-superiority-of-moisture-sensitive-indices" class="nav-link" data-scroll-target="#superiority-of-moisture-sensitive-indices"><span class="header-section-number">4.1.2</span> Superiority of Moisture-Sensitive Indices</a></li>
+  <li><a href="#importance-of-temporal-resolution-and-data-quality" id="toc-importance-of-temporal-resolution-and-data-quality" class="nav-link" data-scroll-target="#importance-of-temporal-resolution-and-data-quality"><span class="header-section-number">4.1.3</span> Importance of Temporal Resolution and Data Quality</a></li>
+  </ul></li>
+  <li><a href="#operational-applicability-and-spatial-constraints" id="toc-operational-applicability-and-spatial-constraints" class="nav-link" data-scroll-target="#operational-applicability-and-spatial-constraints"><span class="header-section-number">4.2</span> Operational Applicability and Spatial Constraints</a>
+  <ul class="collapse">
+  <li><a href="#the-trade-off-between-metric-optimization-and-spatial-robustness" id="toc-the-trade-off-between-metric-optimization-and-spatial-robustness" class="nav-link" data-scroll-target="#the-trade-off-between-metric-optimization-and-spatial-robustness"><span class="header-section-number">4.2.1</span> The Trade-off Between Metric Optimization and Spatial Robustness</a></li>
+  <li><a href="#geolocation-uncertainty-and-edge-effects" id="toc-geolocation-uncertainty-and-edge-effects" class="nav-link" data-scroll-target="#geolocation-uncertainty-and-edge-effects"><span class="header-section-number">4.2.2</span> Geolocation Uncertainty and Edge Effects</a></li>
+  </ul></li>
+  <li><a href="#conclusion-and-outlook" id="toc-conclusion-and-outlook" class="nav-link" data-scroll-target="#conclusion-and-outlook"><span class="header-section-number">4.3</span> Conclusion and Outlook</a></li>
+  </ul></li>
+  <li><a href="#statement-of-reproducibility" id="toc-statement-of-reproducibility" class="nav-link" data-scroll-target="#statement-of-reproducibility"><span class="header-section-number">5</span> Statement of Reproducibility</a></li>
+  <li><a href="#sec-refs" id="toc-sec-refs" class="nav-link" data-scroll-target="#sec-refs"><span class="header-section-number">6</span> References</a></li>
+  <li><a href="#appendix" id="toc-appendix" class="nav-link" data-scroll-target="#appendix">Appendix</a>
+  <ul class="collapse">
+  <li><a href="#appendix-a-full-model-evaluation-results" id="toc-appendix-a-full-model-evaluation-results" class="nav-link" data-scroll-target="#appendix-a-full-model-evaluation-results">Appendix A: Full Model Evaluation Results</a></li>
+  </ul></li>
+  </ul>
+<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="index.pdf"><i class="bi bi-file-pdf"></i>Typst (zhaw-lsfm)</a></li></ul></div></nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Satellite-Based Monitoring of Grassland Management</h1>
+<p class="subtitle lead">Detecting Mowing Events on Airport Areas Using Machine Learning</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Florian Klaver </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+<div>
+  <div class="keywords">
+    <div class="block-title">Keywords</div>
+    <p>Machine Learning, Remote Sensing, Sentinel-2, Vegetation Indices, Mowing Detection, Airport Management</p>
+  </div>
+</div>
+
+</header>
+
+
+<section id="abstract" class="level1 unnumbered unlisted">
+<h1 class="unnumbered unlisted">Abstract</h1>
+<p>Efficient grassland management at airports is a critical component of aviation safety, serving to minimize wildlife hazards and reduce the risk of bird strikes. Currently, the monitoring of mowing activities at Zurich Airport relies on manual recording, which can be labor-intensive and inconsistent. This project assesses the feasibility and performance of machine learning (ML) workflows for automating the detection of mowing events using exclusively open-source Sentinel-2 optical satellite imagery.</p>
+<p>The study utilized a dataset spanning the years 2019 to 2023, comprising 1,899 ground truth mowing events and corresponding multispectral imagery. A rigorous preprocessing pipeline was developed, featuring a “Temporal Triplet” sampling strategy that contrasts mowing events against natural growth periods to generate a robust training dataset. Feature engineering focused on spectral indices, comparing moisture-sensitive indices (NDII) against traditional greenness indices (NDVI) as well as combinatios of multiple indices. Three machine learning architectures (Random Forest, LightGBM, and Support Vector Machine) were trained and compared both as simple baseline and optimized variants using a Group Shuffle Split strategy. The best performing models were then applied to full satellite scenes for spatial validation.</p>
+<p>The quantitative evaluation demonstrated that pixel-based models can achieve high detection performance, with the Tuned SVM using a Hybrid feature set achieving the highest F1-score of 0.921. However, a discrepancy was observed between quantitative metrics and spatial application. While multi-feature models scored higher on clean test samples, they show significant over-prediction when applied to full satellite scenes due to overfitting on environmental noise. In contrast, simpler models relying solely on the difference in the Normalized Difference Infrared Index (NDII) proved to be spatially more robust and precise. This study confirms that an automated mowing detection system using Sentinel-2 data is feasible with high accuracy (~91%), highlighting that rigorous data preprocessing is more critical to success than model complexity. For operational implementation, a simple, change-based feature set is recommended to minimize false positives, with future development focusing on integrating Synthetic Aperture Radar (SAR) data to overcome cloud cover limitations.</p>
+</section>
+<section id="zusammenfassung" class="level1 unnumbered unlisted">
+<h1 class="unnumbered unlisted">Zusammenfassung</h1>
+<p>Eine effiziente Grünflächenbewirtschaftung an Flughäfen ist ein wichtiger Bestandteil der Flugsicherheit, da sie dazu beiträgt, Gefahren durch Wildtiere zu minimieren und das Risiko von Vogelschlägen zu verringern. Derzeit erfolgt die Überwachung der Mäharbeiten am Flughafen Zürich durch manuelle Aufzeichnungen, was arbeitsintensiv und uneinheitlich sein kann. Dieses Projekt bewertet die Machbarkeit und Leistungsfähigkeit von Workflows mit maschinellem Lernen (ML) zur Automatisierung der Erkennung von Mähvorgängen unter ausschließlicher Verwendung von optischen Sentinel-2-Satellitenbildern aus Open Source.</p>
+<p>Die Studie verwendete einen Datensatz aus den Jahren 2019 bis 2023, der 1.899 gemähte Flächen und entsprechende multispektrale Bilder umfasste. Es wurde eine strenge Preprocessing-Pipeline entwickelt, die eine „Temporal Triplet”-Sampling-Strategie umfasst, bei der gemähte Flächen mit natürlichen Wachstumsperioden verglichen werden, um einen robusten Trainingsdatensatz zu generieren. Das Feature Engineering konzentrierte sich auf Spektralindizes und verglich feuchtigkeitsempfindliche Indizes (NDII) mit traditionellen Grünindizes (NDVI) sowie Kombinationen mehrerer Indizes. Drei Machine-Learning-Architekturen (Random Forest, LightGBM und Support Vector Machine) wurden trainiert und sowohl als einfache Basisvarianten als auch als optimierte Varianten unter Verwendung einer Group-Shuffle-Split-Strategie verglichen. Die Modelle mit der besten Performance wurden dann zur räumlichen Validierung auf vollständige Satellitenbilder angewendet.</p>
+<p>Die quantitative Auswertung zeigte, dass pixelbasierte Modelle eine hohe Erkennungsleistung erzielen können, wobei die optimierte SVM mit einem hybriden Feature-Set den höchsten F1-Score von 0,921 erreichte. Allerdings wurde eine Diskrepanz zwischen quantitativen Metriken und räumlicher Anwendung festgestellt. Während Multi-Feature-Modelle bei sauberen Testproben höhere Werte erzielten, zeigen sie bei der Anwendung auf vollständige Satellitenbilder aufgrund einer Überanpassung an Umgebungsrauschen eine signifikante Übervorhersage. Im Gegensatz dazu erwiesen sich einfachere Modelle, die sich ausschließlich auf die Differenz des normalisierten Differenz-Infrarot-Index (NDII) stützen, als räumlich robuster und präziser. Diese Studie bestätigt, dass ein automatisiertes Mäherkennungssystem unter Verwendung von Sentinel-2-Daten mit hoher Genauigkeit (~91 %) realisierbar ist, und unterstreicht, dass eine rigorose Datenvorverarbeitung für den Erfolg wichtiger ist als die Komplexität des Modells. Für die operative Umsetzung wird ein einfaches, auf Veränderungen basierendes Feature-Set empfohlen, um Fehlalarme zu minimieren, wobei sich die zukünftige Entwicklung auf die Integration von Synthetic Aperture Radar (SAR)-Daten konzentrieren sollte, um die Einschränkungen durch Wolken zu überwinden.</p>
+</section>
+<section id="acknowledgements" class="level1 unnumbered unlisted">
+<h1 class="unnumbered unlisted">Acknowledgements</h1>
+<p>I would like to thank my supervisor Nils Ratnaweera for his guidance and feedback throughout this project. I am also very grateful to the Airport Zürich and the ZHAW research group from the Institute for Environment and Natural Resources for providing the necessary data used in this study. Finally, I would like to acknowledge the use of AI-based tools, which helped fixing and debugging problems in the code as well as refine text.</p>
+<p>The cover image is courtesy of Flughafen Zürich AG, from their <em>Fotos Aviatik &amp; Flugbetrieb</em> collection <span class="citation" data-cites="zrh_cover_img">(<a href="#ref-zrh_cover_img" role="doc-biblioref">Flughafen Zürich AG n.d.</a>)</span>.</p>
+</section>
+<section id="list-of-abbreviations" class="level1 unnumbered">
+<h1 class="unnumbered">List of abbreviations</h1>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 13%">
+<col style="width: 48%">
+<col style="width: 16%">
+</colgroup>
+<tbody>
+<tr class="odd">
+<td>VI</td>
+<td>Vegetation Index</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>NDVI</td>
+<td colspan="2">Normalized Difference Vegetation Index |</td>
+</tr>
+<tr class="odd">
+<td>GNDVI</td>
+<td colspan="2">Green Normalized Difference Vegetation Index</td>
+</tr>
+<tr class="even">
+<td>EVI</td>
+<td>Enhanced Vegetation Index</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>SAVI</td>
+<td>Soil-Adjusted Vegetation Index</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>NDII</td>
+<td colspan="2">Normalized Difference Infrared Index |</td>
+</tr>
+<tr class="odd">
+<td>NIR</td>
+<td>Near-Infrared</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>SWIR</td>
+<td>Short-Wave Infrared</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>SAR</td>
+<td>Synthetic Aperture Radar</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>ML</td>
+<td>Machine Learning</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>RF</td>
+<td>Random Forest</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>LGBM</td>
+<td>Light Gradient Boosting Machine</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>SVM</td>
+<td>Support Vector Machine</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="introduction" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Introduction</h1>
+<section id="background-and-current-state-of-research" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="background-and-current-state-of-research"><span class="header-section-number">1.1</span> Background and current state of research</h2>
+<p>Satellite-based Earth observation has become an indispensable tool for monitoring environmental processes across large spatial and temporal scales. The availability of high-resolution and multispectral data from missions such as the European Space Agency’s Sentinel-2 constellation enables continuous observation of vegetation dynamics with a temporal resolution suitable for detecting short-term land cover changes <span class="citation" data-cites="drusch2012">(<a href="#ref-drusch2012" role="doc-biblioref">Drusch et al. 2012</a>)</span>. Sentinel-2’s spectral bands, combined with vegetation indices such as the Normalized Difference Vegetation Index (NDVI), have proven especially effective for characterizing vegetation health, biomass, and seasonal patterns <span class="citation" data-cites="pettorelli2005">(<a href="#ref-pettorelli2005" role="doc-biblioref">Pettorelli et al. 2005</a>)</span>.</p>
+<p>In recent years, the use of remote sensing data has expanded beyond ecological monitoring to address practical management challenges in infrastructure-dominated landscapes such as airports. Grasslands at airports require regular mowing to maintain safety conditions by reducing vegetation height and preventing the attraction of bird species that increase the risk of bird strikes <span class="citation" data-cites="devault2011">(<a href="#ref-devault2011" role="doc-biblioref">DeVault et al. 2011</a>)</span>. Monitoring these mowing activities over time is essential for linking land management practices with ecological and safety-related outcomes, such as bird population dynamics and the frequency of bird strikes.</p>
+<section id="spectral-response-of-managed-grassland" class="level3" data-number="1.1.1">
+<h3 data-number="1.1.1" class="anchored" data-anchor-id="spectral-response-of-managed-grassland"><span class="header-section-number">1.1.1</span> Spectral Response of Managed Grassland</h3>
+<p>The automated detection of grass mowing events relies on the physical principles of spectral reflectance. Healthy, dense grass strongly absorbs red light (for photosynthesis) and reflects near-infrared (NIR) radiation due to cell structure. When a mowing event occurs, the biomass is abruptly removed or reduced. This physical change results in a distinctive “spectral signature” in the time series data: a sudden drop in NIR reflectance and a corresponding decrease in Vegetation Indices (VIs) such as the NDVI <span class="citation" data-cites="pettorelli2005">(<a href="#ref-pettorelli2005" role="doc-biblioref">Pettorelli et al. 2005</a>)</span>.</p>
+<p>However, mowing affects not just chlorophyll content but also water content and soil exposure. Consequently, indices incorporating Short-Wave Infrared (SWIR) bands, which are sensitive to moisture, can sometimes offer better discrimination than traditional NIR-based indices. Andreatta et al.&nbsp;demonstrated this by comparing multiple vegetation indices like NDVI, GVMI, and MTCI, finding that the Normalized Difference Infrared Index (NDII) yielded the highest accuracy for mowing frequency detection <span class="citation" data-cites="andreatta2022">(<a href="#ref-andreatta2022" role="doc-biblioref">Andreatta et al. 2022</a>)</span>.</p>
+</section>
+<section id="mowing-event-detection-strategies" class="level3" data-number="1.1.2">
+<h3 data-number="1.1.2" class="anchored" data-anchor-id="mowing-event-detection-strategies"><span class="header-section-number">1.1.2</span> Mowing Event Detection Strategies</h3>
+<p>Approaches to automate mowing detection generally fall into two categories: rule-based thresholding and machine learning (ML) classification.</p>
+<p><strong>Rule-based</strong> methods typically analyze the temporal profile of a VI, looking for sudden drops that signify a harvest or mowing event. Reinermann et al.&nbsp;successfully applied a threshold-based algorithm to Sentinel-2 Enhanced Vegetation Index (EVI) time series in Germany <span class="citation" data-cites="reinermann2022">(<a href="#ref-reinermann2022" role="doc-biblioref">Reinermann et al. 2022</a>)</span>. These methods are computationally efficient and interpretable but struggle with irregular time series caused by atmospheric noise.</p>
+<p><strong>Machine Learning (ML)</strong> offers an alternative by learning complex, non-linear relationships between spectral bands and management events without explicit threshold definitions. In the context of remote sensing, two primary families of algorithms are relevant:</p>
+<ul>
+<li><em>Pixel-based Classifiers (e.g., Random Forest, SVM):</em> These algorithms treat each pixel (or time step) as an independent vector of features. Garioud et al.&nbsp;observed that “lighter” models like Support Vector Machines (SVM) can be highly effective for specific event detection tasks, sometimes outperforming more complex deep learning architectures when training data is limited <span class="citation" data-cites="garioud2019">(<a href="#ref-garioud2019" role="doc-biblioref">Garioud et al. 2019</a>)</span>.</li>
+<li><em>Deep Learning (e.g., CNNs, RNNs):</em> These models can exploit spatial context (Convolutional Neural Networks) or temporal sequences (Recurrent Neural Networks). Komisarenko et al.&nbsp;utilized a deep learning model with a “reject region,” allowing the system to ignore low-confidence predictions <span class="citation" data-cites="komisarenko2022">(<a href="#ref-komisarenko2022" role="doc-biblioref">Komisarenko et al. 2022</a>)</span>. While powerful, these models typically require significantly larger datasets to generalize well.</li>
+</ul>
+</section>
+<section id="operational-challenges-optical-vs.-radar" class="level3" data-number="1.1.3">
+<h3 data-number="1.1.3" class="anchored" data-anchor-id="operational-challenges-optical-vs.-radar"><span class="header-section-number">1.1.3</span> Operational Challenges: Optical vs.&nbsp;Radar</h3>
+<p>A recurring theme in the literature is the limitation of optical sensors like Sentinel-2 due to atmospheric conditions. De Vroey et al.&nbsp;highlight that relying solely on optical data is risky in temperate climates where cloud cover is frequent <span class="citation" data-cites="devroey2021">(<a href="#ref-devroey2021" role="doc-biblioref">De Vroey, Radoux, and Defourny 2021</a>)</span>. Consequently, many state-of-the-art approaches advocate for the fusion of optical data with Synthetic Aperture Radar (SAR) data (e.g., Sentinel-1), which can penetrate clouds <span class="citation" data-cites="reinermann2022 garioud2019">(<a href="#ref-reinermann2022" role="doc-biblioref">Reinermann et al. 2022</a>; <a href="#ref-garioud2019" role="doc-biblioref">Garioud et al. 2019</a>)</span>.</p>
+<p>However, integrating SAR data increases the complexity of the processing pipeline and data storage requirements. For operational use cases such as the one at Zurich Airport, there is a practical interest in determining the performance limits of a purely optical workflow, which is often more accessible and easier to interpret for non-specialist end-users.</p>
+</section>
+</section>
+<section id="problem-statement-and-research-gap" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="problem-statement-and-research-gap"><span class="header-section-number">1.2</span> Problem Statement and Research Gap</h2>
+<p>While general methods for change detection exist, their specific application to operational airport management requires targeted validation. This study is embedded within a larger collaborative research project between the ZHAW and Zurich Airport, which investigates how grassland management impacts bird populations and, consequently, the number of bird strikes.</p>
+<p>Current manual recording of mowing events can be labor-intensive or inconsistent. To reliably link management practices to bird strike data, a consistent, retrospective dataset of mowing events is required. The specific challenge lies in utilizing optical satellite imagery in a region prone to cloud cover and distinguishing mowing events from other phenological changes in the vegetation. Furthermore, while complex models exist, there is a need to assess whether a machine learning approach can be implemented efficiently using available open-source data (Sentinel-2) and limited ground truth records.</p>
+</section>
+<section id="goal" class="level2" data-number="1.3">
+<h2 data-number="1.3" class="anchored" data-anchor-id="goal"><span class="header-section-number">1.3</span> Goal</h2>
+<p>The main objective of this project is to assess the feasibility and performance of Machine Learning (ML) models for detecting mowing events using Sentinel-2 satellite imagery. The study utilizes two datasets spanning the years 2019 to 2023 consisting of:</p>
+<ol type="1">
+<li><strong>Ground Truth Data:</strong> Polygons indicating the date and area of specific mowing events at Zurich Airport.<br>
+</li>
+<li><strong>Satellite Imagery:</strong> Sentinel-2 multispectral data consisting of 13 bands.</li>
+</ol>
+<p>By combining these data sources, this project aims to develop and evaluate an ML workflow for event detection. The focus of this work is not solely on maximizing the statistical accuracy of the model, but rather on a critical assessment of the methodology. This includes evaluating how well, how robustly, and how easily such a detection system can be implemented and maintained for operational monitoring at the airport.</p>
+</section>
+</section>
+<section id="methods" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Methods</h1>
+<section id="study-area-and-data-description" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="study-area-and-data-description"><span class="header-section-number">2.1</span> Study Area and Data Description</h2>
+<section id="study-area" class="level3" data-number="2.1.1">
+<h3 data-number="2.1.1" class="anchored" data-anchor-id="study-area"><span class="header-section-number">2.1.1</span> Study area</h3>
+<p>The study area included the entire perimeter of Zurich Airport (ZRH), located in the Canton of Zurich, Switzerland. The airport grounds consist of a complex mosaic of built infrastructure (runways, terminals, hangars) and managed green spaces. These grasslands are subject to strict management protocols, including regular mowing, to mitigate wildlife hazards. <a href="#fig-study_area" class="quarto-xref">Figure&nbsp;1</a> illustrates the spatial extent of the study area, highlighting the airport boundary and the specific grassy areas within it that are relevant for mowing event detection.</p>
+<div id="fig-study_area" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-study_area-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/study_area.png" class="img-fluid figure-img" style="width:70.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-study_area-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Study area: Zurich Airport (ZRH). Aitport Boundary in cyan, grass areas within airport in gold.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="ground-truth-data" class="level3" data-number="2.1.2">
+<h3 data-number="2.1.2" class="anchored" data-anchor-id="ground-truth-data"><span class="header-section-number">2.1.2</span> Ground Truth Data</h3>
+<p>The research group from the Institute for Environment and Natural Resources working on the larger project provided ground truth data for mowing events in the form of a GeoPackage file. The dataset includes the geometry of mown areas and the corresponding date of the event. It covers the period from May 9, 2019, to October 29, 2024, containing a total of 1,899 recorded events.</p>
+<p><a href="#fig-all_mowing_events" class="quarto-xref">Figure&nbsp;2</a> illustrates the spatial distribution of these events. Due to the large number of overlapping polygons over time, the map uses transparency and different colours to differentiate between events and indicate mowing intensity. Intensive colours represent zones that are mowed more frequently, while lighter colours indicate less intensive management.</p>
+<div id="fig-all_mowing_events" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-all_mowing_events-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/all_mowing_events.png" class="img-fluid figure-img" style="width:70.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-all_mowing_events-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Overview of all mowing-events at Zurich Airport between 2019 and 2024.
+</figcaption>
+</figure>
+</div>
+<p>It is important to note that these polygons were originally derived from manual records created by the field staff performing the mowing. These records were then digitized. Consequently, the data contains inherent spatial uncertainties and potential inaccuracies (e.g.&nbsp;overlapping hard surfaces such as runways or buildings) typical of digitized manual logs. This issue is already well visible in <a href="#fig-all_mowing_events" class="quarto-xref">Figure&nbsp;2</a> and illustrated more closely for an example event in <a href="#fig-event" class="quarto-xref">Figure&nbsp;3</a> where the polygon overlaps with infrastructure.</p>
+<div id="fig-event" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-event-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/some_event_basemap.png" class="img-fluid figure-img" style="width:60.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-event-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: Example mowing-event polygon with basemap before cleaning. Here a basemap with higher resolution was used instead of a satellite image from the Sentinel-2 dataset, to better visualize the inaccuracies.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="sentinel-2-satellite-imagery" class="level3" data-number="2.1.3">
+<h3 data-number="2.1.3" class="anchored" data-anchor-id="sentinel-2-satellite-imagery"><span class="header-section-number">2.1.3</span> Sentinel-2 Satellite Imagery</h3>
+<p>The remote sensing database consists of a time series of Sentinel-2 multispectral images provided as .tif files. The dataset spans from March 1, 2019, to September 16, 2023, comprising a total of 201 acquisitions. The imagery includes 13 spectral bands, encompassing visible, near-infrared, and short-wave infrared wavelengths, as well as a specific cloud probability band used for quality masking. Since the satellite data ends in September 2023, the effective study period for this project is limited to the overlap between the ground truth and satellite availability (2019–2023).</p>
+<p>To verify the data quality, typical vegetation spectral signatures were inspected. Figure <a href="#fig-sentinel_2" class="quarto-xref">Figure&nbsp;4</a> shows an example of a standard RGB composite alongside the calculated NDVI, demonstrating the distinct contrast between vegetated and non-vegetated surfaces.</p>
+<div id="fig-sentinel_2" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-sentinel_2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/sentinel_rgb_ndvi.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-sentinel_2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Example Sentinel-2 satellite image, true Colour (RGB) composite (left) and NDVI (right).
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="additional-data-for-preprocessing" class="level3" data-number="2.1.4">
+<h3 data-number="2.1.4" class="anchored" data-anchor-id="additional-data-for-preprocessing"><span class="header-section-number">2.1.4</span> Additional Data for Preprocessing</h3>
+<p>To ensure the analysis focused exclusively on relevant vegetation, an official cadastral survey dataset was used for data cleaning. The “Official Survey” (Amtliche Vermessung) data was obtained from the GIS browser of the Canton of Zurich <span class="citation" data-cites="zh_geodata_2025">(<a href="#ref-zh_geodata_2025" role="doc-biblioref">Kanton Zürich 2017</a>)</span>. Specifically, the layer Bodenbedeckung_BoFlaeche_Area was utilized. From this dataset, the class “humusiert.Acker_Wiese_Weide” (arable land, meadow, pasture) served as a mask to clean the ground truth polygons where they overlapped with hard surfaces such as runways or buildings or dense vegetation such as bushes. Additionally, the fire brigade responsibility area data, also provided by the Canton of Zurich, was used to limit the final model application to only the airport grounds.</p>
+</section>
+</section>
+<section id="data-preprocessing-and-mask-generation" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="data-preprocessing-and-mask-generation"><span class="header-section-number">2.2</span> Data Preprocessing and Mask Generation</h2>
+<section id="geometric-cleaning-of-ground-truth-polygons" class="level3" data-number="2.2.1">
+<h3 data-number="2.2.1" class="anchored" data-anchor-id="geometric-cleaning-of-ground-truth-polygons"><span class="header-section-number">2.2.1</span> Geometric Cleaning of Ground Truth Polygons</h3>
+<p>Since the raw ground truth polygons contained digitization inaccuracies (e.g.&nbsp;overlapping with runways or buildings), a spatial filtering process was applied in the first step. The polygons were geometrically intersected with the “humusiert.Acker_Wiese_Weide” class from the “Official Survey” dataset. This operation clipped the mowing events to the official boundaries of the grassy areas, ensuring that no paved or more densly vegetated surfaces were included in the training data. This step lead to some large events being split up into multiple smaller fragments. Therefore, a size threshold was applied: any resulting polygon fragment smaller than 400 m² was discarded.</p>
+<p>Although these two geometric cleaning steps result in some data loss, they are essential for training the model with clean data. Using faulty data would result in much poorer model performance. <a href="#fig-cleaning" class="quarto-xref">Figure&nbsp;5</a> demonstrates the impact of these steps, showing how a raw polygon extending onto a building and pavement is clipped to the correct vegetation boundary.</p>
+<div id="fig-cleaning" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-cleaning-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/event_cleaning.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cleaning-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: Comparison of raw mowing polygon (left) and cleaned polygon clipped to the official meadow boundaries (right). Resulting polygon in dark green, light green shows official meadow areas.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="satellite-data-standardization" class="level3" data-number="2.2.2">
+<h3 data-number="2.2.2" class="anchored" data-anchor-id="satellite-data-standardization"><span class="header-section-number">2.2.2</span> Satellite Data Standardization</h3>
+<p>To ensure spatial consistency between the satellite imagery and the Swiss coordinate system used for the ground truth data, all Sentinel-2 images were reprojected to the Swiss national standard EPSG:2056 (CH1903+/LV95). This transformation was performed using bilinear resampling. A verification step confirmed that all 201 reprojected images shared the exact same spatial extent, resolution, and pixel grid, which is required for time-series analysis.</p>
+</section>
+<section id="label-generation-and-rasterization" class="level3" data-number="2.2.3">
+<h3 data-number="2.2.3" class="anchored" data-anchor-id="label-generation-and-rasterization"><span class="header-section-number">2.2.3</span> Label Generation and Rasterization</h3>
+<p>In order to prepare the data for a pixel-based machine learning approach, the vector-based ground truth had to be converted into a format that was compatible with the satellite raster grid. To achieve this, all events with the same date were combined to create a binary mask for each unique date.</p>
+<p>Using the first Sentinel-2 image as a spatial reference, the cleaned mowing polygons were rasterized. In these binary masks, pixels falling within a mowed polygon were assigned a value of 1 (mowed), while all other pixels were assigned 0 (not mowed). This process resulted in a set of “Ground Truth Masks” that perfectly aligned pixel-for-pixel with the corresponding Sentinel-2 imagery (<a href="#fig-sentinel_mask_overlay" class="quarto-xref">Figure&nbsp;6</a>), enabling the direct extraction of spectral signatures for labelled training data.</p>
+<div id="fig-sentinel_mask_overlay" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-sentinel_mask_overlay-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/sentinel_mask_overlay.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-sentinel_mask_overlay-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6: Left image: Example binary mask for mowed (white) and not mowed (black) pixels. Right image: Same mask (mowed only) overlayed over an example sentinel-2 image). Mowed pixels in magenat for better visibility.
+</figcaption>
+</figure>
+</div>
+</section>
+</section>
+<section id="feature-engineering" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="feature-engineering"><span class="header-section-number">2.3</span> Feature Engineering</h2>
+<section id="temporal-matching-strategy" class="level3" data-number="2.3.1">
+<h3 data-number="2.3.1" class="anchored" data-anchor-id="temporal-matching-strategy"><span class="header-section-number">2.3.1</span> Temporal Matching Strategy</h3>
+<p>A supervised machine learning model requires labeled examples of both “mowing events” and “non-events.” While the ground truth provides the dates of mowing, defining a “non-event” in a continuously changing biological system is challenging. To address this, a “Temporal Triplet” strategy was implemented for each confirmed ground truth event.</p>
+<p>This strategy constructs two distinct classes of samples for every confirmed event, allowing the model to learn the spectral difference between mowing and natural variation:</p>
+<ul>
+<li><strong>Postive Samples (Mowing):</strong> These samples represent a true mowing event. They are derived from the spectral change between the pre-event image (<span class="math inline">\(t_{n-1}\)</span>) and the post-event image (<span class="math inline">\(t_{n}\)</span>). This captures the abrupt removal of biomass.<br>
+</li>
+<li><strong>Negative Samples (Not Mowed):</strong> These samples represent “normal” conditions. They are derived from the change between the reference image (<span class="math inline">\(t_{n-2}\)</span>) and the pre-event image (<span class="math inline">\(t_{n-1}\)</span>). This comparison captures natural growth or stable conditions over a larger time window, acting as a “no-mowing” example for the model.</li>
+</ul>
+<p>To generate these samples, three specific Sentinel-2 images were identified for each event based on temporal proximity and cloud-free conditions:</p>
+<ol type="1">
+<li><strong><span class="math inline">\(t_{n}\)</span> (Post-event):</strong> The first image 1 to 7 days after the event.<br>
+</li>
+<li><strong><span class="math inline">\(t_{n-1}\)</span> (Pre-event):</strong> The last clear image 3 to 8 days before the event, using a safety buffer to avoid faulty dates.</li>
+<li><strong><span class="math inline">\(t_{n-2}\)</span> (Reference):</strong> Image 9 to 20 days before the event.</li>
+</ol>
+<p><strong>Justification for these Temporal Windows:</strong><br>
+The selection of these specific time windows was driven by preliminary testing, which compared this approach against simply selecting the nearest available images regardless of time gap. While the nearest-neighbor method yielded a larger sample size, it resulted in a “Not Mowed” dataset dominated by image pairs with shorter time differences. In such short intervals, the change in vegetation indices is near zero, making it statistically indistinguishable from atmospheric noise or weak mowing events. This was directly reflected in lower model performance.</p>
+<p>By enforcing a larger gap for the reference image (<span class="math inline">\(t_{n-2}\)</span>), the “Not Mowed” samples capture a more distinct natural growth signal (positive VI change) while still keeping some samples showing relatively steady conditions. This shifts the distribution of the negative class away from zero, creating a clearer decision boundary against the negative signal of mowing events. This design choice significantly improved the model’s ability to distinguish true mowing from noise.</p>
+</section>
+<section id="spectral-indices-and-feature-calculation" class="level3" data-number="2.3.2">
+<h3 data-number="2.3.2" class="anchored" data-anchor-id="spectral-indices-and-feature-calculation"><span class="header-section-number">2.3.2</span> Spectral Indices and Feature Calculation</h3>
+<p>For each sample, a feature vector was constructed consisting of raw spectral bands (Blue, Green, Red, NIR, SWIR) and derived Vegetation Indices (VIs). The raw bands provide the baseline spectral information, while the indices were chosen to highlight specific physiological properties of the grass.</p>
+<p>Crucially, for every index, the differential feature (<span class="math inline">\(\Delta Index\)</span>) was calculated by subtracting the value of the earlier image from the later image (e.g., <span class="math inline">\(NDVI_{n} - NDVI_{n-1}\)</span>). These differential features are the primary inputs for the model, as they quantify the magnitude of the change rather than the absolute state of the vegetation.</p>
+<p>The following five indices were calculated:</p>
+<p><strong>NDVI (Normalized Difference Vegetation Index):</strong> <span class="math display">\[\text{NDVI} = \frac{\text{NIR} - \text{Red}}{\text{NIR} + \text{Red}}\]</span> The NDVI is the standard metric for vegetation health and biomass. It was chosen as the baseline feature because mowing causes a massive reduction in green biomass, which should result in a sharp drop in NDVI values.</p>
+<p><strong>GNDVI (Green Normalized Difference Vegetation Index):</strong> <span class="math display">\[\text{GNDVI} = \frac{\text{NIR} - \text{Green}}{\text{NIR} + \text{Green}}\]</span> Similar to NDVI, but using the green band instead of red. This index is often more sensitive to chlorophyll concentration than NDVI. It was included to see if changes in pigment (stress) are easier to detect than pure biomass loss.</p>
+<p><strong>EVI (Enhanced Vegetation Index):</strong> <span class="math display">\[\text{EVI} = G \cdot \frac{\text{NIR} - \text{Red}}{\text{NIR} + C_1 \cdot \text{Red} - C_2 \cdot \text{Blue} + L}\]</span> <em>Standard coefficients:</em> <span class="math inline">\(G = 2.5\)</span>, <span class="math inline">\(C_1 = 6\)</span>, <span class="math inline">\(C_2 = 7.5\)</span>, <span class="math inline">\(L = 1\)</span><br>
+The EVI is optimized for dense vegetation where NDVI might “saturate” (stop showing differences). Since airport grass is often dense before mowing, EVI might provide a clearer signal. It also uses the blue band to correct for atmospheric noise.</p>
+<p><strong>SAVI (Soil-Adjusted Vegetation Index):</strong> <span class="math display">\[\text{SAVI} = \frac{\text{NIR} - \text{Red}}{\text{NIR} + \text{Red} + L} \cdot (1 + L)\]</span> <em>Standard groundfactor:</em> <span class="math inline">\(L = 0.5\)</span><br>
+Mowing often exposes the underlying soil, especially if the grass is cut short. SAVI includes a correction factor to minimize the influence of soil brightness, ensuring the signal comes from the vegetation itself.</p>
+<p><strong>NDII (Normalized Difference Infrared Index):</strong> <span class="math display">\[\text{NDII} = \frac{\text{NIR} - \text{SWIR}}{\text{NIR} + \text{SWIR}}\]</span> The NDII uses Short-Wave Infrared (SWIR) to measure water content in the leaves. Since cut grass dries out quickly (losing water content), this index can often detect mowing events that might be missed by indices that only look at “greenness.”</p>
+<p>While all these indices were calculated during the feature engineering step, the subsequent modeling phase (Section 2.4) tests different combinations of them to determine which single index or combination of indices yields the best model performance.</p>
+</section>
+<section id="cloud-masking-and-sampling" class="level3" data-number="2.3.3">
+<h3 data-number="2.3.3" class="anchored" data-anchor-id="cloud-masking-and-sampling"><span class="header-section-number">2.3.3</span> Cloud masking and Sampling</h3>
+<p>To ensure data integrity, the Sentinel-2 cloud probability band was utilized. A strict threshold of 30% probability was applied: any pixel exceeding this value in any of the triplet images was masked out and excluded from sampling. The cloud masking process is crucial to prevent atmospheric interference from skewing the spectral signatures used for model training.</p>
+<p>A balanced dataset was sampled from the valid, cloud-free pixels intersecting with the ground truth masks. To account for the potential spatial shift of the Sentinel-2 images, an additional buffer of 10 metres (equivalent to one pixel) was added to the inside of the polygon borders. This ensured cleaner samples, although it reduced the total number of available samples. A total of 33’368 samples were generated with 54.2% positives and 45.8% negatives. This small imbalance is negligible and helps to ensure that the model is not biased towards the majority class, which is a common issue in anomaly detection tasks.</p>
+</section>
+</section>
+<section id="machine-learning-modelling" class="level2" data-number="2.4">
+<h2 data-number="2.4" class="anchored" data-anchor-id="machine-learning-modelling"><span class="header-section-number">2.4</span> Machine Learning Modelling</h2>
+<section id="feature-importance" class="level3" data-number="2.4.1">
+<h3 data-number="2.4.1" class="anchored" data-anchor-id="feature-importance"><span class="header-section-number">2.4.1</span> Feature Importance</h3>
+<p>Before building the models, the importance of the features (calculated vegetation indices and raw bands) was analyzed, using a model based feature selection. This method deploys a simple Random Forest model on the given data and determines which features have the highest impact on the model prediction. <a href="#fig-feature_importance" class="quarto-xref">Figure&nbsp;7</a> shows clearly that the difference between the vegetation index values between two images help the model the most to predict the right label. To further analyse the correlation between the features (and their respective correlation to the label) a correlation matrix was calculated (<a href="#fig-correlation_matrix" class="quarto-xref">Figure&nbsp;8</a>).</p>
+<p>These two steps are especially important to simplify the model. Redundant or unimportant information (features) should be removed before the model training in order to keep training time low and improve performance.</p>
+<div id="fig-feature_importance" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-feature_importance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/feature_importance.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-feature_importance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7: Feature importance derived by Random Forest model based feature selection
+</figcaption>
+</figure>
+</div>
+<div id="fig-correlation_matrix" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-correlation_matrix-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/feature_correlation_matrix.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-correlation_matrix-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8: Correlation matrix of the available features and label
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="data-splitting" class="level3" data-number="2.4.2">
+<h3 data-number="2.4.2" class="anchored" data-anchor-id="data-splitting"><span class="header-section-number">2.4.2</span> Data Splitting</h3>
+<p>A critical challenge in pixel-based remote sensing classification is spatial autocorrelation and data leakage. Since multiple pixels are sampled from the same mowing event, a standard random split would likely place pixels from Event A in both the training and test sets, leading to optimistically biased results.</p>
+<p>To prevent this leakage, a Group Shuffle Split strategy was employed. The dataset was grouped by the unique match_id (representing a specific event date). The split was performed such that all pixels belonging to a specific mowing event were assigned exclusively to either the training set (80%) or the test set (20%). This ensures that the model is evaluated on its ability to generalize to completely new, unseen events, rather than just unseen pixels from known events.</p>
+</section>
+<section id="model-architecture" class="level3" data-number="2.4.3">
+<h3 data-number="2.4.3" class="anchored" data-anchor-id="model-architecture"><span class="header-section-number">2.4.3</span> Model Architecture</h3>
+<p>Three distinct types of supervised learning algorithms were implemented:</p>
+<ol type="1">
+<li><strong>Random Forest (RF):</strong> An ensemble learning method constructing a multitude of decision trees. RF is robust to noise and less prone to overfitting than single trees. It serves as the primary baseline due to its widespread success in remote sensing classification tasks.</li>
+<li><strong>LightGBM (LGBM):</strong> A gradient boosting framework that uses tree-based learning algorithms. It is generally faster than Random Forest and can often achieve higher accuracy by learning from the residual errors of previous iterations.</li>
+<li><strong>Support Vector Machine (SVM):</strong> A geometric classifier that finds the optimal hyperplane separating the classes. SVMs are effective in high-dimensional spaces but can be computationally expensive for large datasets.</li>
+</ol>
+</section>
+<section id="hyperparameter-tuning-and-experimental-design" class="level3" data-number="2.4.4">
+<h3 data-number="2.4.4" class="anchored" data-anchor-id="hyperparameter-tuning-and-experimental-design"><span class="header-section-number">2.4.4</span> Hyperparameter Tuning and Experimental Design</h3>
+<p>For each model architecture, two configurations were tested:</p>
+<ul>
+<li><strong>Baseline:</strong> Using default hyperparameters to establish a performance benchmark.</li>
+<li><strong>Tuned:</strong> Using GridSearchCV with 5-fold cross-validation (Group K-Fold) to optimize key hyperparameters such as the number of estimators, tree depth, and learning rate.</li>
+</ul>
+<p>The goal of testing both of these approaches was to evaluate whether more complex models would significantly outperfom their simpler baseline counterparts.</p>
+<p>Additionally, the impact of feature selection was assessed by training these models on four different feature subsets:</p>
+<ul>
+<li><strong>NDVI Only:</strong> Using only the difference in the NDVI (<span class="math inline">\(\Delta NDVI\)</span>) as a predictor as this vegetation index is the most broadly used.</li>
+<li><strong>NDII Only:</strong> Using only the difference in NDII (<span class="math inline">\(\Delta NDII\)</span>) to test if moisture change is a better predictor than greenness. This predictor already showed both stronger correlation (<a href="#fig-correlation_matrix" class="quarto-xref">Figure&nbsp;8</a>) with the label and higher feature importance (<a href="#fig-feature_importance" class="quarto-xref">Figure&nbsp;7</a>).</li>
+<li><strong>Combined Feature Set:</strong> Using a combination of differential indices (<span class="math inline">\(\Delta NDVI\)</span>, <span class="math inline">\(\Delta NDII\)</span>, <span class="math inline">\(\Delta NIR\)</span>, <span class="math inline">\(\Delta Red\)</span>, <span class="math inline">\(\Delta SWIR\)</span>) and post-event state features (<span class="math inline">\(SWIR_{after}\)</span>, <span class="math inline">\(NDII_{after}\)</span>) to exploit both change magnitude and absolute spectral properties.</li>
+<li><strong>Hybrid Feature Set:</strong> A reduced set of the most important features identified based on previous model runs, aiming to balance model complexity and performance. The features were selected based on their correlation with the label and the strongest feature ndii_diff. The goal was to add information from features that have a weak correlation to the main feature ndii_diff but high correlation with the label. This set contains the following features: <span class="math inline">\(\Delta NDII\)</span>, <span class="math inline">\(NDII_{after}\)</span>, <span class="math inline">\(\Delta GNDVI\)</span> and <span class="math inline">\(SWIR_{after}\)</span>.</li>
+</ul>
+</section>
+<section id="evaluation-metrics" class="level3" data-number="2.4.5">
+<h3 data-number="2.4.5" class="anchored" data-anchor-id="evaluation-metrics"><span class="header-section-number">2.4.5</span> Evaluation Metrics</h3>
+<p>To assess model performance, the following metrics were calculated on the held-out test set:</p>
+<ul>
+<li><strong>Accuracy:</strong> Percentage of all points that the model correctly classified out the total number of points.</li>
+<li><strong>Precision:</strong> Fraction of correctly predicted points within a given class out of all points the model assigned to the class.</li>
+<li><strong>Recall (Sensitivity):</strong> Fraction of correctly predicted points out of all actual points in that class.</li>
+<li><strong>F1-score:</strong> Harmonic mean of precision and recall, balancing both metrics.</li>
+<li><strong>Support:</strong> Indicates the number of true points for each class.</li>
+<li><strong>Confusion Matrix:</strong> To visualize the balance between False Positives (predicting mowing when there is none) and False Negatives (missing a mowing event).</li>
+<li><strong>ROC AUC (Area Under the Receiver Operating Characteristic Curve):</strong> A threshold-independent metric that evaluates the model’s ability to discriminate between classes across all possible decision thresholds.</li>
+</ul>
+</section>
+</section>
+<section id="model-application" class="level2" data-number="2.5">
+<h2 data-number="2.5" class="anchored" data-anchor-id="model-application"><span class="header-section-number">2.5</span> Model Application</h2>
+<p>While standard metrics like F1-score and Accuracy provide a quantitative measure of model performance on the test set, they do not account for the spatial coherence of predictions in a real-world scenario. A model might achieve high accuracy by correctly classifying random pixels but fail to reconstruct the contiguous shape of a mowing event.</p>
+<p>To address this, the final step of the methodology involved a full-scene application of the best-performing models. This qualitative assessment aims to simulate an operational workflow where the model is applied to entire satellite scenes to detect new events.</p>
+<section id="test-scene-selection" class="level3" data-number="2.5.1">
+<h3 data-number="2.5.1" class="anchored" data-anchor-id="test-scene-selection"><span class="header-section-number">2.5.1</span> Test Scene Selection</h3>
+<p>To ensure a fair visual evaluation, a specific temporal pair of Sentinel-2 images was selected based on optimal atmospheric conditions. Using the cloud statistics generated during feature engineering, an image pair with the very low cloud coverage over the study area was identified:</p>
+<ul>
+<li><strong>Before Image:</strong> August 07, 2020</li>
+<li><strong>After Image:</strong> August 12, 2020</li>
+<li><strong>Target Mowing Events:</strong> Ground truth records indicate mowing occurred on July 10 and July 11, 2020.</li>
+</ul>
+</section>
+<section id="application-pipeline" class="level3" data-number="2.5.2">
+<h3 data-number="2.5.2" class="anchored" data-anchor-id="application-pipeline"><span class="header-section-number">2.5.2</span> Application Pipeline</h3>
+<p>The selected models were applied to this image pair using the following pipeline:</p>
+<ul>
+<li><strong>Feature Generation:</strong> All relevant spectral features (bands and indices) were calculated for every pixel in the scene.</li>
+<li><strong>Masking:</strong> The official survey and fire brigade responsibility areas masks were applied to exclude non-grassland areas (runways, buildings, forests) and limit the prediction to only the airport area. Clouds were again masked using the probability threshold (<span class="math inline">\(&gt;30\%\)</span>).</li>
+<li><strong>Inference:</strong> The trained models predicted the class (Mowed vs.&nbsp;Not Mowed) for all valid pixels. Performance was then evaluated by calculating standard metrics (Accuracy, Precision, Recall, F1-score) against the ground truth for these specific dates.</li>
+<li><strong>Mapping:</strong> The resulting predictions were visualized as maps, colouring true positive predictions cyan, false positives orange and false negatives magenta. This allows for an intuitive assessment of model performance compared to the ground truth data.</li>
+<li><strong>Confusion Matrix:</strong> A confusion matrix was generated for the entire scene to quantify the number of true positives, false positives, true negatives, and false negatives in this spatial context in greater detail.</li>
+</ul>
+<p>This visual assessment was performed for a selection of the best performing model configurations for both multiple and single feature sets to determine if the additional complexity of multiple features yields visibly better spatial definitions of the mowing events. To compare the prediction between two distinct models, a difference map was created, highlighting areas where the models agreed or disagreed. Finally, an additional spectral analysis was conducted to understand the reasons behind false predictions.</p>
+</section>
+</section>
+</section>
+<section id="results" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Results</h1>
+<section id="model-evaluation-on-test-data" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="model-evaluation-on-test-data"><span class="header-section-number">3.1</span> Model Evaluation on Test Data</h2>
+<p>The classification models were evaluated on the held-out test set generated via the Group Shuffle Split strategy. This section details the quantitative performance metrics of the tested model architectures, model complexities and feature sets.</p>
+<p>A summary of the results for all tested model configurations is visible in <a href="#tbl-model_evaluation" class="quarto-xref">Table&nbsp;1</a>.</p>
+<div class="cell" data-execution_count="1">
+<div id="tbl-model_evaluation" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="1">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-model_evaluation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;1: Model evaluation metrics
+</figcaption>
+<div aria-describedby="tbl-model_evaluation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output cell-output-display" data-execution_count="3">
+<div id="qypqrnsosx" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>
+#qypqrnsosx table {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+        }
+
+#qypqrnsosx thead, tbody, tfoot, tr, td, th { border-style: none; }
+ tr { background-color: transparent; }
+#qypqrnsosx p { margin: 0; padding: 0; }
+ #qypqrnsosx .gt_table { display: table; border-collapse: collapse; line-height: normal; margin-left: auto; margin-right: auto; color: #333333; font-size: 10pt; font-weight: normal; font-style: normal; background-color: #FFFFFF; width: auto; border-top-style: solid; border-top-width: 2px; border-top-color: black; border-right-style: none; border-right-width: 2px; border-right-color: #D3D3D3; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: black; border-left-style: none; border-left-width: 2px; border-left-color: #D3D3D3; }
+ #qypqrnsosx .gt_caption { padding-top: 4px; padding-bottom: 4px; }
+ #qypqrnsosx .gt_title { color: #333333; font-size: 12pt; font-weight: initial; padding-top: 4px; padding-bottom: 4px; padding-left: 5px; padding-right: 5px; border-bottom-color: #FFFFFF; border-bottom-width: 0; }
+ #qypqrnsosx .gt_subtitle { color: #333333; font-size: 10pt; font-weight: initial; padding-top: 3px; padding-bottom: 5px; padding-left: 5px; padding-right: 5px; border-top-color: #FFFFFF; border-top-width: 0; }
+ #qypqrnsosx .gt_heading { background-color: #FFFFFF; text-align: center; border-bottom-color: #FFFFFF; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; }
+ #qypqrnsosx .gt_bottom_border { border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: gray; }
+ #qypqrnsosx .gt_col_headings { border-top-style: solid; border-top-width: 2px; border-top-color: #D3D3D3; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #D3D3D3; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; }
+ #qypqrnsosx .gt_col_heading { color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: normal; text-transform: inherit; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; vertical-align: bottom; padding-top: 5px; padding-bottom: 5px; padding-left: 5px; padding-right: 5px; overflow-x: hidden; }
+ #qypqrnsosx .gt_column_spanner_outer { color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: normal; text-transform: inherit; padding-top: 0; padding-bottom: 0; padding-left: 4px; padding-right: 4px; }
+ #qypqrnsosx .gt_column_spanner_outer:first-child { padding-left: 0; }
+ #qypqrnsosx .gt_column_spanner_outer:last-child { padding-right: 0; }
+ #qypqrnsosx .gt_column_spanner { border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #D3D3D3; vertical-align: bottom; padding-top: 5px; padding-bottom: 5px; overflow-x: hidden; display: inline-block; width: 100%; }
+ #qypqrnsosx .gt_spanner_row { border-bottom-style: hidden; }
+ #qypqrnsosx .gt_group_heading { padding-top: 8px; padding-bottom: 8px; padding-left: 5px; padding-right: 5px; color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit; border-top-style: solid; border-top-width: 2px; border-top-color: #D3D3D3; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #D3D3D3; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; vertical-align: middle; text-align: left; }
+ #qypqrnsosx .gt_empty_group_heading { padding: 0.5px; color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; border-top-style: solid; border-top-width: 2px; border-top-color: #D3D3D3; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #D3D3D3; vertical-align: middle; }
+ #qypqrnsosx .gt_from_md> :first-child { margin-top: 0; }
+ #qypqrnsosx .gt_from_md> :last-child { margin-bottom: 0; }
+ #qypqrnsosx .gt_row { padding-top: 3px; padding-bottom: 3px; padding-left: 5px; padding-right: 5px; margin: 10px; border-top-style: solid; border-top-width: 1px; border-top-color: #D3D3D3; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; vertical-align: middle; overflow-x: hidden; }
+ #qypqrnsosx .gt_stub { color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit; border-right-style: solid; border-right-width: 2px; border-right-color: #D3D3D3; padding-left: 5px; padding-right: 5px; }
+ #qypqrnsosx .gt_stub_row_group { color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit; border-right-style: solid; border-right-width: 2px; border-right-color: #D3D3D3; padding-left: 5px; padding-right: 5px; vertical-align: top; }
+ #qypqrnsosx .gt_row_group_first td { border-top-width: 2px; }
+ #qypqrnsosx .gt_row_group_first th { border-top-width: 2px; }
+ #qypqrnsosx .gt_striped { color: #333333; background-color: #F4F4F4; }
+ #qypqrnsosx .gt_table_body { border-top-style: solid; border-top-width: 2px; border-top-color: #D3D3D3; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #D3D3D3; }
+ #qypqrnsosx .gt_grand_summary_row { color: #333333; background-color: #FFFFFF; text-transform: inherit; padding-top: 8px; padding-bottom: 8px; padding-left: 5px; padding-right: 5px; }
+ #qypqrnsosx .gt_first_grand_summary_row_bottom { border-top-style: double; border-top-width: 6px; border-top-color: #D3D3D3; }
+ #qypqrnsosx .gt_last_grand_summary_row_top { border-bottom-style: double; border-bottom-width: 6px; border-bottom-color: #D3D3D3; }
+ #qypqrnsosx .gt_sourcenotes { color: #333333; background-color: #FFFFFF; border-bottom-style: none; border-bottom-width: 2px; border-bottom-color: #D3D3D3; border-left-style: none; border-left-width: 2px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 2px; border-right-color: #D3D3D3; }
+ #qypqrnsosx .gt_sourcenote { font-size: 90%; padding-top: 4px; padding-bottom: 4px; padding-left: 5px; padding-right: 5px; text-align: left; }
+ #qypqrnsosx .gt_left { text-align: left; }
+ #qypqrnsosx .gt_center { text-align: center; }
+ #qypqrnsosx .gt_right { text-align: right; font-variant-numeric: tabular-nums; }
+ #qypqrnsosx .gt_font_normal { font-weight: normal; }
+ #qypqrnsosx .gt_font_bold { font-weight: bold; }
+ #qypqrnsosx .gt_font_italic { font-style: italic; }
+ #qypqrnsosx .gt_super { font-size: 65%; }
+ #qypqrnsosx .gt_footnote_marks { font-size: 75%; vertical-align: 0.4em; position: initial; }
+ #qypqrnsosx .gt_asterisk { font-size: 100%; vertical-align: 0; }
+ 
+</style>
+
+<table class="gt_table do-not-create-environment cell caption-top table table-sm table-striped small" data-quarto-bootstrap="false">
+<thead>
+<tr class="gt_col_headings header">
+<th id="Model" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Model Type</th>
+<th id="Num_Features" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">n Features</th>
+<th id="Accuracy" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Accuracy</th>
+<th id="Precision" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Precision</th>
+<th id="Recall" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Recall</th>
+<th id="F1_Score" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">F1 Score</th>
+<th id="ROC_AUC" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">ROC AUC</th>
+</tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="odd">
+<td class="gt_row gt_left">Baseline RF (NDII)</td>
+<td class="gt_row gt_right">1</td>
+<td class="gt_row gt_right">0.860</td>
+<td class="gt_row gt_right">0.862</td>
+<td class="gt_row gt_right">0.860</td>
+<td class="gt_row gt_right">0.860</td>
+<td class="gt_row gt_right">0.936</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left gt_striped">Tuned RF (NDII)</td>
+<td class="gt_row gt_right gt_striped">1</td>
+<td class="gt_row gt_right gt_striped">0.911</td>
+<td class="gt_row gt_right gt_striped">0.918</td>
+<td class="gt_row gt_right gt_striped">0.911</td>
+<td class="gt_row gt_right gt_striped">0.911</td>
+<td class="gt_row gt_right gt_striped">0.953</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left">Baseline LGBM (NDII)</td>
+<td class="gt_row gt_right">1</td>
+<td class="gt_row gt_right">0.913</td>
+<td class="gt_row gt_right">0.922</td>
+<td class="gt_row gt_right">0.913</td>
+<td class="gt_row gt_right">0.914</td>
+<td class="gt_row gt_right">0.958</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left gt_striped">Tuned LGBM (NDII)</td>
+<td class="gt_row gt_right gt_striped">1</td>
+<td class="gt_row gt_right gt_striped">0.913</td>
+<td class="gt_row gt_right gt_striped">0.922</td>
+<td class="gt_row gt_right gt_striped">0.913</td>
+<td class="gt_row gt_right gt_striped">0.914</td>
+<td class="gt_row gt_right gt_striped">0.959</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left">Baseline SVM (NDII)</td>
+<td class="gt_row gt_right">1</td>
+<td class="gt_row gt_right">0.913</td>
+<td class="gt_row gt_right">0.922</td>
+<td class="gt_row gt_right">0.913</td>
+<td class="gt_row gt_right">0.913</td>
+<td class="gt_row gt_right">0.949</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left gt_striped">Tuned SVM (NDII)</td>
+<td class="gt_row gt_right gt_striped">1</td>
+<td class="gt_row gt_right gt_striped">0.911</td>
+<td class="gt_row gt_right gt_striped">0.920</td>
+<td class="gt_row gt_right gt_striped">0.911</td>
+<td class="gt_row gt_right gt_striped">0.911</td>
+<td class="gt_row gt_right gt_striped">0.965</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left">Baseline RF (NDVI)</td>
+<td class="gt_row gt_right">1</td>
+<td class="gt_row gt_right">0.818</td>
+<td class="gt_row gt_right">0.819</td>
+<td class="gt_row gt_right">0.818</td>
+<td class="gt_row gt_right">0.818</td>
+<td class="gt_row gt_right">0.910</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left gt_striped">Tuned RF (NDVI)</td>
+<td class="gt_row gt_right gt_striped">1</td>
+<td class="gt_row gt_right gt_striped">0.893</td>
+<td class="gt_row gt_right gt_striped">0.896</td>
+<td class="gt_row gt_right gt_striped">0.893</td>
+<td class="gt_row gt_right gt_striped">0.894</td>
+<td class="gt_row gt_right gt_striped">0.935</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left">Baseline LGBM (NDVI)</td>
+<td class="gt_row gt_right">1</td>
+<td class="gt_row gt_right">0.919</td>
+<td class="gt_row gt_right">0.921</td>
+<td class="gt_row gt_right">0.919</td>
+<td class="gt_row gt_right">0.919</td>
+<td class="gt_row gt_right">0.937</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left gt_striped">Tuned LGBM (NDVI)</td>
+<td class="gt_row gt_right gt_striped">1</td>
+<td class="gt_row gt_right gt_striped">0.918</td>
+<td class="gt_row gt_right gt_striped">0.921</td>
+<td class="gt_row gt_right gt_striped">0.918</td>
+<td class="gt_row gt_right gt_striped">0.918</td>
+<td class="gt_row gt_right gt_striped">0.937</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left">Baseline SVM (NDVI)</td>
+<td class="gt_row gt_right">1</td>
+<td class="gt_row gt_right">0.920</td>
+<td class="gt_row gt_right">0.923</td>
+<td class="gt_row gt_right">0.920</td>
+<td class="gt_row gt_right">0.920</td>
+<td class="gt_row gt_right">0.941</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left gt_striped">Tuned SVM (NDVI)</td>
+<td class="gt_row gt_right gt_striped">1</td>
+<td class="gt_row gt_right gt_striped">0.915</td>
+<td class="gt_row gt_right gt_striped">0.920</td>
+<td class="gt_row gt_right gt_striped">0.915</td>
+<td class="gt_row gt_right gt_striped">0.916</td>
+<td class="gt_row gt_right gt_striped">0.963</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left">Baseline RF (Multi)</td>
+<td class="gt_row gt_right">8</td>
+<td class="gt_row gt_right">0.900</td>
+<td class="gt_row gt_right">0.907</td>
+<td class="gt_row gt_right">0.900</td>
+<td class="gt_row gt_right">0.901</td>
+<td class="gt_row gt_right">0.939</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left gt_striped">Tuned RF (Multi)</td>
+<td class="gt_row gt_right gt_striped">8</td>
+<td class="gt_row gt_right gt_striped">0.904</td>
+<td class="gt_row gt_right gt_striped">0.911</td>
+<td class="gt_row gt_right gt_striped">0.904</td>
+<td class="gt_row gt_right gt_striped">0.905</td>
+<td class="gt_row gt_right gt_striped">0.940</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left">Baseline LGBM (Multi)</td>
+<td class="gt_row gt_right">8</td>
+<td class="gt_row gt_right">0.898</td>
+<td class="gt_row gt_right">0.903</td>
+<td class="gt_row gt_right">0.898</td>
+<td class="gt_row gt_right">0.898</td>
+<td class="gt_row gt_right">0.945</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left gt_striped">Tuned LGBM (Multi)</td>
+<td class="gt_row gt_right gt_striped">8</td>
+<td class="gt_row gt_right gt_striped">0.900</td>
+<td class="gt_row gt_right gt_striped">0.906</td>
+<td class="gt_row gt_right gt_striped">0.900</td>
+<td class="gt_row gt_right gt_striped">0.901</td>
+<td class="gt_row gt_right gt_striped">0.948</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left">Baseline SVM (Multi)</td>
+<td class="gt_row gt_right">8</td>
+<td class="gt_row gt_right">0.913</td>
+<td class="gt_row gt_right">0.921</td>
+<td class="gt_row gt_right">0.913</td>
+<td class="gt_row gt_right">0.913</td>
+<td class="gt_row gt_right">0.959</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left gt_striped">Tuned SVM (Multi)</td>
+<td class="gt_row gt_right gt_striped">8</td>
+<td class="gt_row gt_right gt_striped">0.913</td>
+<td class="gt_row gt_right gt_striped">0.922</td>
+<td class="gt_row gt_right gt_striped">0.913</td>
+<td class="gt_row gt_right gt_striped">0.914</td>
+<td class="gt_row gt_right gt_striped">0.975</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left">Baseline RF (Hybrid)</td>
+<td class="gt_row gt_right">4</td>
+<td class="gt_row gt_right">0.917</td>
+<td class="gt_row gt_right">0.921</td>
+<td class="gt_row gt_right">0.917</td>
+<td class="gt_row gt_right">0.917</td>
+<td class="gt_row gt_right">0.964</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left gt_striped">Tuned RF (Hybrid)</td>
+<td class="gt_row gt_right gt_striped">4</td>
+<td class="gt_row gt_right gt_striped">0.920</td>
+<td class="gt_row gt_right gt_striped">0.924</td>
+<td class="gt_row gt_right gt_striped">0.920</td>
+<td class="gt_row gt_right gt_striped">0.920</td>
+<td class="gt_row gt_right gt_striped">0.966</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left">Baseline LGBM (Hybrid)</td>
+<td class="gt_row gt_right">4</td>
+<td class="gt_row gt_right">0.914</td>
+<td class="gt_row gt_right">0.918</td>
+<td class="gt_row gt_right">0.914</td>
+<td class="gt_row gt_right">0.915</td>
+<td class="gt_row gt_right">0.968</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left gt_striped">Tuned LGBM (Hybrid)</td>
+<td class="gt_row gt_right gt_striped">4</td>
+<td class="gt_row gt_right gt_striped">0.915</td>
+<td class="gt_row gt_right gt_striped">0.919</td>
+<td class="gt_row gt_right gt_striped">0.915</td>
+<td class="gt_row gt_right gt_striped">0.915</td>
+<td class="gt_row gt_right gt_striped">0.971</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left">Baseline SVM (Hybrid)</td>
+<td class="gt_row gt_right">4</td>
+<td class="gt_row gt_right">0.919</td>
+<td class="gt_row gt_right">0.926</td>
+<td class="gt_row gt_right">0.919</td>
+<td class="gt_row gt_right">0.919</td>
+<td class="gt_row gt_right">0.959</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left gt_striped">Tuned SVM (Hybrid)</td>
+<td class="gt_row gt_right gt_striped">4</td>
+<td class="gt_row gt_right gt_striped">0.923</td>
+<td class="gt_row gt_right gt_striped">0.929</td>
+<td class="gt_row gt_right gt_striped">0.923</td>
+<td class="gt_row gt_right gt_striped">0.923</td>
+<td class="gt_row gt_right gt_striped">0.964</td>
+</tr>
+</tbody><tfoot class="gt_sourcenotes">
+<tr class="odd">
+<td colspan="7" class="gt_sourcenote">Features for 'Multi': ndii_diff, ndvi_diff, nir_diff, red_diff, swir_diff, ndii_after, swir_after, evi_after. Features for 'Hybrid': ndii_diff, ndii_after, gndvi_diff, swir_after.</td>
+</tr>
+</tfoot>
+
+</table>
+
+
+</div>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p>Overall, all tested models achieved high performance, with F1-scores ranging from 0.810 to 0.922. There were no drastic differences in performance between the optimized architectures. The top-performing SVM, Random Forest, and LightGBM models were all within 0.006 of each other in terms of F1-score. The only significant outlier was the baseline Random Forest using single features (NDVI or NDII), which performed notably worse than the tuned configurations, showing a performance drop of up to ~0.12.</p>
+<section id="impact-of-feature-selection" class="level3" data-number="3.1.1">
+<h3 data-number="3.1.1" class="anchored" data-anchor-id="impact-of-feature-selection"><span class="header-section-number">3.1.1</span> Impact of Feature Selection</h3>
+<p>The comparison between single-index models shows no major difference in the diagnostic value of moisture-sensitive indices over greenness indices. Although the baseline Random Forest model using NDII achieved an F1-score of 0.862, outperforming the corresponding NDVI-only model (0.810), this gap narrowed after hyperparameter tuning and the trend even reversed slightly for the other model architectures.</p>
+<p>The Multi-feature (8 features) and Hybrid-feature (4 features) sets generally performed minimally better than the single-feature models. Notably, the Hybrid Feature Set, which retains only the most predictive variables, achieved the highest scores overall. It slightly (but not significantly) outperformed the full Multi-feature set with most model architectures. This suggests that the additional features in the fuller set may have introduced minor noise or redundancy without adding discriminatory power.</p>
+</section>
+<section id="hyperparameter-tuning-and-model-comparison" class="level3" data-number="3.1.2">
+<h3 data-number="3.1.2" class="anchored" data-anchor-id="hyperparameter-tuning-and-model-comparison"><span class="header-section-number">3.1.2</span> Hyperparameter Tuning and Model Comparison</h3>
+<p>Hyperparameter tuning had a varied impact depending on the algorithm. For the Random Forest classifier, tuning was critical. The baseline model using NDII achieved a F1-score of 0.862. After tuning with GridSearchCV, this increased to 0.908. A similar improvement was observed for the NDVI-only Random Forest model (0.810 to 0.897), while the models using multiple features showed only minor changes after tuning.</p>
+<p>In contrast, for the LightGBM and SVM architectures, hyperparameter tuning had a negligible effect, with F1-score changes of less than 0.01 between baseline and tuned versions. This indicates these algorithms are highly robust even with default settings for this specific task.</p>
+<p>Comparing the fully tuned architectures using the best-performing Hybrid-Feature set:</p>
+<ul>
+<li><strong>Support Vector Machine (SVM):</strong> Achieved the second highest overall performance with an F1-score of 0.920. It demonstrated excellent balance with a Precision of 0.928 and Recall of 0.921.</li>
+<li><strong>Random Forest:</strong> Followed closely with an F1-score of 0.919.</li>
+<li><strong>LightGBM:</strong> Achieved an F1-score of 0.913, ranking third among the tuned architectures, though it achieved the highest ROC AUC (0.968), indicating excellent ranking ability.</li>
+</ul>
+</section>
+<section id="confusion-matrices-and-roc-curves" class="level3" data-number="3.1.3">
+<h3 data-number="3.1.3" class="anchored" data-anchor-id="confusion-matrices-and-roc-curves"><span class="header-section-number">3.1.3</span> Confusion Matrices and ROC Curves</h3>
+<p>To illustrate the trade-offs between the different model configurations, a visual analysis of the Confusion Matrices and ROC Curves was conducted. Four representative models are presented here to highlight key findings, (full results for all tested configurations are available in the Appendix).</p>
+<p><a href="#fig-baseline_RF_NDII" class="quarto-xref">Figure&nbsp;9</a> illustrates the starting performance using the simple baseline Random Forest with a single feature. The Confusion Matrix (left) reveals a relatively high number of False Positives (458) and False Negatives (714). The ROC curve (right) shows an AUC of 0.935, which serves as the benchmark for subsequent improvements.</p>
+<div id="fig-baseline_RF_NDII" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-baseline_RF_NDII-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/models/baseline_rf_ndii_evaluation.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-baseline_RF_NDII-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9: Confusion Matrix (left) and ROC-Curve (right) for the baseline Random Forest model using only the ndii_diff feature
+</figcaption>
+</figure>
+</div>
+<p><a href="#fig-tuned_SVM_NDII" class="quarto-xref">Figure&nbsp;10</a> demonstrates the gain achieved purely by switching to a tuned Support Vector Machine architecture while keeping the same single feature (NDII). The False Positives dropped drastically from 458 to 81, significantly improving precision. The ROC AUC increased to 0.965, showing a steeper initial rise compared to the baseline RF.</p>
+<div id="fig-tuned_SVM_NDII" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tuned_SVM_NDII-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/models/tuned_svm_ndii_evaluation.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tuned_SVM_NDII-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;10: Confusion Matrix (left) and ROC-Curve (right) for the tuned SVM model using only the ndii_diff feature
+</figcaption>
+</figure>
+</div>
+<p><a href="#fig-tuned_LGBM_HYBRID" class="quarto-xref">Figure&nbsp;11</a> shows the performance of the tuned gradient boosting model with the optimized feature set. While it produced slightly more False Positives (187) than the SVM, it achieved the highest ROC AUC (0.971) of this selection. This indicates excellent separability between classes, suggesting that with threshold adjustment, it could be further optimized.</p>
+<div id="fig-tuned_LGBM_HYBRID" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tuned_LGBM_HYBRID-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/models/tuned_lgbm_hybrid_evaluation.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tuned_LGBM_HYBRID-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;11: Confusion Matrix (left) and ROC-Curve (right) for the tuned LGBM model using the hybrid feature-set
+</figcaption>
+</figure>
+</div>
+<p><a href="#fig-tuned_SVM_HYBRID" class="quarto-xref">Figure&nbsp;12</a> shows the overall best performing configuration. The Hybrid-feature SVM achieved an optimal balance with minimal errors (87 False Positives, 582 False Negatives). The ROC curve remains high (AUC 0.964), confirming that the selected combination of moisture and vegetation state features allows the SVM to construct a robust and conservative decision boundary.</p>
+<div id="fig-tuned_SVM_HYBRID" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tuned_SVM_HYBRID-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/models/tuned_svm_hybrid_evaluation.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tuned_SVM_HYBRID-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;12: Confusion Matrix (left) and ROC-Curve (right) for the tuned SVM model using the hybrid feature-set
+</figcaption>
+</figure>
+</div>
+</section>
+</section>
+<section id="model-application-on-full-scene" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="model-application-on-full-scene"><span class="header-section-number">3.2</span> Model Application on Full Scene</h2>
+<p>To validate the models in an operational context, the four representative models analyzed above were applied to a full Sentinel-2 scene pair (August 07 vs.&nbsp;August 12, 2020) to predict a series of known mowing events. The ground-truth masks between those two dates showed a total of 2’252 mowed pixels. <a href="#tbl-model_application" class="quarto-xref">Table&nbsp;2</a> summarizes the key performance metrics for each model when applied to the entire scene. It focuses on the “Mowing” class, as this is the minority class of interest in this “full-scene” application.</p>
+<div class="cell" data-execution_count="2">
+<div id="tbl-model_application" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="2">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-model_application-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;2: Model application metrics
+</figcaption>
+<div aria-describedby="tbl-model_application-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output cell-output-display" data-execution_count="4">
+<div id="wvxywbvdng" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>
+#wvxywbvdng table {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+        }
+
+#wvxywbvdng thead, tbody, tfoot, tr, td, th { border-style: none; }
+ tr { background-color: transparent; }
+#wvxywbvdng p { margin: 0; padding: 0; }
+ #wvxywbvdng .gt_table { display: table; border-collapse: collapse; line-height: normal; margin-left: auto; margin-right: auto; color: #333333; font-size: 10pt; font-weight: normal; font-style: normal; background-color: #FFFFFF; width: auto; border-top-style: solid; border-top-width: 2px; border-top-color: black; border-right-style: none; border-right-width: 2px; border-right-color: #D3D3D3; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: black; border-left-style: none; border-left-width: 2px; border-left-color: #D3D3D3; }
+ #wvxywbvdng .gt_caption { padding-top: 4px; padding-bottom: 4px; }
+ #wvxywbvdng .gt_title { color: #333333; font-size: 12pt; font-weight: initial; padding-top: 4px; padding-bottom: 4px; padding-left: 5px; padding-right: 5px; border-bottom-color: #FFFFFF; border-bottom-width: 0; }
+ #wvxywbvdng .gt_subtitle { color: #333333; font-size: 10pt; font-weight: initial; padding-top: 3px; padding-bottom: 5px; padding-left: 5px; padding-right: 5px; border-top-color: #FFFFFF; border-top-width: 0; }
+ #wvxywbvdng .gt_heading { background-color: #FFFFFF; text-align: center; border-bottom-color: #FFFFFF; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; }
+ #wvxywbvdng .gt_bottom_border { border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: gray; }
+ #wvxywbvdng .gt_col_headings { border-top-style: solid; border-top-width: 2px; border-top-color: #D3D3D3; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #D3D3D3; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; }
+ #wvxywbvdng .gt_col_heading { color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: normal; text-transform: inherit; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; vertical-align: bottom; padding-top: 5px; padding-bottom: 5px; padding-left: 5px; padding-right: 5px; overflow-x: hidden; }
+ #wvxywbvdng .gt_column_spanner_outer { color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: normal; text-transform: inherit; padding-top: 0; padding-bottom: 0; padding-left: 4px; padding-right: 4px; }
+ #wvxywbvdng .gt_column_spanner_outer:first-child { padding-left: 0; }
+ #wvxywbvdng .gt_column_spanner_outer:last-child { padding-right: 0; }
+ #wvxywbvdng .gt_column_spanner { border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #D3D3D3; vertical-align: bottom; padding-top: 5px; padding-bottom: 5px; overflow-x: hidden; display: inline-block; width: 100%; }
+ #wvxywbvdng .gt_spanner_row { border-bottom-style: hidden; }
+ #wvxywbvdng .gt_group_heading { padding-top: 8px; padding-bottom: 8px; padding-left: 5px; padding-right: 5px; color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit; border-top-style: solid; border-top-width: 2px; border-top-color: #D3D3D3; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #D3D3D3; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; vertical-align: middle; text-align: left; }
+ #wvxywbvdng .gt_empty_group_heading { padding: 0.5px; color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; border-top-style: solid; border-top-width: 2px; border-top-color: #D3D3D3; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #D3D3D3; vertical-align: middle; }
+ #wvxywbvdng .gt_from_md> :first-child { margin-top: 0; }
+ #wvxywbvdng .gt_from_md> :last-child { margin-bottom: 0; }
+ #wvxywbvdng .gt_row { padding-top: 3px; padding-bottom: 3px; padding-left: 5px; padding-right: 5px; margin: 10px; border-top-style: solid; border-top-width: 1px; border-top-color: #D3D3D3; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; vertical-align: middle; overflow-x: hidden; }
+ #wvxywbvdng .gt_stub { color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit; border-right-style: solid; border-right-width: 2px; border-right-color: #D3D3D3; padding-left: 5px; padding-right: 5px; }
+ #wvxywbvdng .gt_stub_row_group { color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit; border-right-style: solid; border-right-width: 2px; border-right-color: #D3D3D3; padding-left: 5px; padding-right: 5px; vertical-align: top; }
+ #wvxywbvdng .gt_row_group_first td { border-top-width: 2px; }
+ #wvxywbvdng .gt_row_group_first th { border-top-width: 2px; }
+ #wvxywbvdng .gt_striped { color: #333333; background-color: #F4F4F4; }
+ #wvxywbvdng .gt_table_body { border-top-style: solid; border-top-width: 2px; border-top-color: #D3D3D3; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #D3D3D3; }
+ #wvxywbvdng .gt_grand_summary_row { color: #333333; background-color: #FFFFFF; text-transform: inherit; padding-top: 8px; padding-bottom: 8px; padding-left: 5px; padding-right: 5px; }
+ #wvxywbvdng .gt_first_grand_summary_row_bottom { border-top-style: double; border-top-width: 6px; border-top-color: #D3D3D3; }
+ #wvxywbvdng .gt_last_grand_summary_row_top { border-bottom-style: double; border-bottom-width: 6px; border-bottom-color: #D3D3D3; }
+ #wvxywbvdng .gt_sourcenotes { color: #333333; background-color: #FFFFFF; border-bottom-style: none; border-bottom-width: 2px; border-bottom-color: #D3D3D3; border-left-style: none; border-left-width: 2px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 2px; border-right-color: #D3D3D3; }
+ #wvxywbvdng .gt_sourcenote { font-size: 90%; padding-top: 4px; padding-bottom: 4px; padding-left: 5px; padding-right: 5px; text-align: left; }
+ #wvxywbvdng .gt_left { text-align: left; }
+ #wvxywbvdng .gt_center { text-align: center; }
+ #wvxywbvdng .gt_right { text-align: right; font-variant-numeric: tabular-nums; }
+ #wvxywbvdng .gt_font_normal { font-weight: normal; }
+ #wvxywbvdng .gt_font_bold { font-weight: bold; }
+ #wvxywbvdng .gt_font_italic { font-style: italic; }
+ #wvxywbvdng .gt_super { font-size: 65%; }
+ #wvxywbvdng .gt_footnote_marks { font-size: 75%; vertical-align: 0.4em; position: initial; }
+ #wvxywbvdng .gt_asterisk { font-size: 100%; vertical-align: 0; }
+ 
+</style>
+
+<table class="gt_table do-not-create-environment cell caption-top table table-sm table-striped small" data-quarto-bootstrap="false">
+<thead>
+<tr class="gt_col_headings header">
+<th id="model_name" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Model</th>
+<th id="accuracy" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Accuracy</th>
+<th id="precision_mowing" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Precision-Mowing</th>
+<th id="recall_mowing" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Recall-Mowing</th>
+<th id="f1_mowing" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">F1-Mowing</th>
+<th id="f1_macro" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">F1 Macro</th>
+</tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="odd">
+<td class="gt_row gt_left">baseline_rf_ndii</td>
+<td class="gt_row gt_right">0.804</td>
+<td class="gt_row gt_right">0.201</td>
+<td class="gt_row gt_right">0.653</td>
+<td class="gt_row gt_right">0.307</td>
+<td class="gt_row gt_right">0.596</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left gt_striped">tuned_svm_ndii</td>
+<td class="gt_row gt_right gt_striped">0.924</td>
+<td class="gt_row gt_right gt_striped">0.424</td>
+<td class="gt_row gt_right gt_striped">0.391</td>
+<td class="gt_row gt_right gt_striped">0.407</td>
+<td class="gt_row gt_right gt_striped">0.683</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left">tuned_lgbm_hybrid</td>
+<td class="gt_row gt_right">0.697</td>
+<td class="gt_row gt_right">0.166</td>
+<td class="gt_row gt_right">0.880</td>
+<td class="gt_row gt_right">0.279</td>
+<td class="gt_row gt_right">0.543</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left gt_striped">tuned_svm_hybrid</td>
+<td class="gt_row gt_right gt_striped">0.683</td>
+<td class="gt_row gt_right gt_striped">0.162</td>
+<td class="gt_row gt_right gt_striped">0.897</td>
+<td class="gt_row gt_right gt_striped">0.274</td>
+<td class="gt_row gt_right gt_striped">0.536</td>
+</tr>
+</tbody><tfoot class="gt_sourcenotes">
+<tr class="odd">
+<td colspan="6" class="gt_sourcenote">Focus on 'Mowing' class metrics as this is the minority class of interest in this application.</td>
+</tr>
+</tfoot>
+
+</table>
+
+
+</div>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p>The quantitative results on the full scene (<a href="#tbl-model_application" class="quarto-xref">Table&nbsp;2</a>) reveal a notable performance drop compared to the test set metrics. While the test set suggested F1-scores above 0.90, the operational application yielded Mowing F1-scores ranging between 0.26 and 0.41. The results highlight a distinct trade-off: Hybrid-feature models (LGBM and SVM) achieved high Recall (~0.89) but suffered from extremely low Precision (~0.16) due to over-prediction. In contrast, the Single-feature SVM (NDII-only) provided the most balanced performance, achieving the highest Mowing F1-score (0.407) and Precision (0.423), even though showing lower Recall (0.391).</p>
+<section id="spatial-and-quantitative-analysis" class="level3" data-number="3.2.1">
+<h3 data-number="3.2.1" class="anchored" data-anchor-id="spatial-and-quantitative-analysis"><span class="header-section-number">3.2.1</span> Spatial and Quantitative Analysis</h3>
+<p>The visual results confirm the discrepancy between the test-set metrics and real-world scene application. While the Hybrid-feature models achieved higher F1-scores on the generated test samples, the spatial prediction maps and the confusion matrices generated for the full scene suggest that the Single-Feature (NDII) Tuned SVM offers the most reliable detection.</p>
+<p><strong>Baseline Random Forest (NDII-only):</strong> The visual output of the Baseline Random Forest (<a href="#fig-pred_rf_ndii" class="quarto-xref">Figure&nbsp;13</a>) reveals a significant amount of “salt-and-pepper” noise. While the model correctly identifies the general location of the mowing event, there are numerous scattered orange pixels all over the grass fields. These “speckles” represent false positives, where single trees in the random forest model overreacted to minor spectral fluctuations. This noise is quantified in the confusion matrix (<a href="#fig-confusion_rf_ndii" class="quarto-xref">Figure&nbsp;14</a>), resulting in a low Mowing Precision of 0.198 and a Mowing F1-score of only 0.304, despite an acceptable Recall of 0.651.</p>
+<div id="fig-pred_rf_ndii" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-pred_rf_ndii-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/eval_map_pred_map_2020-08-12_baseline_rf_ndii.png" class="img-fluid figure-img" style="width:80.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-pred_rf_ndii-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13: Full-scene prediction using Baseline Random Forest model with the ndii_diff feature. Cyan: Pixels correctly predicted as mowed (True Positives), Orange: Pixels wrongly predicted as mowed (False Positives), Magenta: Mowed pixels missed by the model (False Negatives)
+</figcaption>
+</figure>
+</div>
+<div id="fig-confusion_rf_ndii" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-confusion_rf_ndii-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/eval_matrix_pred_map_2020-08-12_baseline_rf_ndii.png" class="img-fluid figure-img" style="width:50.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-confusion_rf_ndii-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;14: Confusion Matrix for the Baseline Random Forest model using only ndii_diff applied to full scene
+</figcaption>
+</figure>
+</div>
+<p><strong>Tuned SVM (NDII-only):</strong> Switching to the Tuned SVM (<a href="#fig-pred_svm_ndii" class="quarto-xref">Figure&nbsp;15</a>) results in the cleanest prediction map. The scattered noise is almost entirely eliminated, which is confirmed by the highest Accuracy (0.924) and Mowing Precision (0.423) among the applied models. The model produces a contiguous prediction that sticks tightly to the core area of the mowing events. However, this model seems to miss the most mowed pixels out of all models, leading to a low Recall of 0.391. Despite this, it achieved the highest Mowing F1-score (0.407) of all models applied to this scene.</p>
+<div id="fig-pred_svm_ndii" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-pred_svm_ndii-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/eval_map_pred_map_2020-08-12_tuned_svm_ndii.png" class="img-fluid figure-img" style="width:80.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-pred_svm_ndii-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;15: Full-scene prediction using tuned SVM model with ndii_diff feature. Cyan: Pixels correctly predicted as mowed (True Positives), Orange: Pixels wrongly predicted as mowed (False Positives), Magenta: Mowed pixels missed by the model (False Negatives)
+</figcaption>
+</figure>
+</div>
+<div id="fig-confusion_svm_ndii" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-confusion_svm_ndii-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/eval_matrix_pred_map_2020-08-12_tuned_svm_ndii.png" class="img-fluid figure-img" style="width:50.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-confusion_svm_ndii-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;16: Confusion Matrix for the tuned SVM model using only ndii_diff applied to full scene
+</figcaption>
+</figure>
+</div>
+<p><strong>Tuned LightGBM (Hybrid-feature):</strong> The Tuned LightGBM with Hybrid features (<a href="#fig-pred_lgbm_hybrid" class="quarto-xref">Figure&nbsp;17</a>) shows a high tendency to over-predict. While it correctly detects most of the mowing events, achieving a high Recall of 0.891, it flags a significantly larger area than the ground truth polygons indicate. This massive overestimation led to a very low Mowing Precision of 0.157 and a substantial drop in overall Accuracy to 0.675. The confusion matrix (<a href="#fig-confusion_lgbm_hybrid" class="quarto-xref">Figure&nbsp;18</a>) highlights this trade-off: detection is nearly complete, but at the cost of many false alarms.</p>
+<div id="fig-pred_lgbm_hybrid" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-pred_lgbm_hybrid-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/eval_map_pred_map_2020-08-12_tuned_lgbm_hybrid.png" class="img-fluid figure-img" style="width:80.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-pred_lgbm_hybrid-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;17: Full-scene prediction using tuned LightGBM model with hybrid features. Cyan: Pixels correctly predicted as mowed (True Positives), Orange: Pixels wrongly predicted as mowed (False Positives), Magenta: Mowed pixels missed by the model (False Negatives)
+</figcaption>
+</figure>
+</div>
+<div id="fig-confusion_lgbm_hybrid" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-confusion_lgbm_hybrid-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/eval_matrix_pred_map_2020-08-12_tuned_lgbm_hybrid.png" class="img-fluid figure-img" style="width:50.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-confusion_lgbm_hybrid-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;18: Confusion Matrix for the tuned LightGBM model using hybrid features applied to full scene
+</figcaption>
+</figure>
+</div>
+<p><strong>Hybrid-Feature Model (Tuned SVM):</strong> Contrary to its status as the “top performer” in the quantitative test set metrics, the Tuned SVM with Hybrid features (<a href="#fig-pred_svm_hybrid" class="quarto-xref">Figure&nbsp;19</a>) produces a large number of False Positives in this full-scene application, almost identical to the Tuned LGBM with Hybrid features. It predicts mowing across broad areas outside the verified polygons, resulting in a low Precision of 0.162 and an Accuracy of 0.684. This is surprising given its low False Positive count in the test set (only 87 errors), but the high Recall of 0.896 confirms it is highly sensitive to the signal, perhaps too sensitive for operational noise.</p>
+<div id="fig-pred_svm_hybrid" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-pred_svm_hybrid-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/eval_map_pred_map_2020-08-12_tuned_svm_hybrid.png" class="img-fluid figure-img" style="width:80.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-pred_svm_hybrid-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;19: Full-scene prediction using tuned SVM model with multiple features. Cyan: Pixels correctly predicted as mowed (True Positives), Orange: Pixels wrongly predicted as mowed (False Positives), Magenta: Mowed pixels missed by the model (False Negatives)
+</figcaption>
+</figure>
+</div>
+<div id="fig-confusion_svm_hybrid" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-confusion_svm_hybrid-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/eval_matrix_pred_map_2020-08-12_tuned_svm_hybrid.png" class="img-fluid figure-img" style="width:50.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-confusion_svm_hybrid-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;20: Confusion Matrix for the tuned SVM model using hybrid features applied to full scene
+</figcaption>
+</figure>
+</div>
+<p>This application of the models was also conducted with some of the other model configurations, leading to similar observations regarding spatial agreement and over-prediction tendencies. <a href="#fig-pred_comparison_Single_vs_Hybrid" class="quarto-xref">Figure&nbsp;21</a> provides a direct visual comparison between the predictions of the tuned SVM models using NDII-only and Hybrid-Feature sets. The difference map highlights areas where the two models agreed (Cyan) and disagreed (Orange for NDII-only, Magenta for Hybrid-Feature). It is evident that the Hybrid-Feature model predicts a substantially larger area as mowed, indicating its higher sensitivity but also a greater risk for false alarms.</p>
+<div id="fig-pred_comparison_Single_vs_Hybrid" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-pred_comparison_Single_vs_Hybrid-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/pred_comparison_Single_vs_Hybrid.png" class="img-fluid figure-img" style="width:80.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-pred_comparison_Single_vs_Hybrid-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;21: Difference map for tuned SVM models using NDII-only and Hybrid-Feature feature sets
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="spectral-analysis-of-false-positives" class="level3" data-number="3.2.2">
+<h3 data-number="3.2.2" class="anchored" data-anchor-id="spectral-analysis-of-false-positives"><span class="header-section-number">3.2.2</span> Spectral Analysis of False Positives</h3>
+<p>To investigate the cause of the over-prediction in the Hybrid-feature model, a spectral analysis was conducted on the disputed pixels (pixels classified as “Mowed” by the Hybrid model but “Not Mowed” by the Ground Truth). <a href="#fig-overprediction_analysis_boxplot" class="quarto-xref">Figure&nbsp;22</a> compares the distribution of the four hybrid features across three classes: True Mowed pixels, Hybrid False Positives (errors), and True Not Mowed pixels.</p>
+<p>The statistical distributions reveal distinct patterns in the error class:</p>
+<ul>
+<li><strong>Change Features (ndii_diff, gndvi_diff):</strong> The True Mowed pixels exhibit a strong negative median change in NDII (-0.068) and GNDVI (-0.028). In contrast, the Hybrid False Positives show near-zero or even positive changes (<span class="math inline">\(\Delta NDII\)</span> -0.005, <span class="math inline">\(\Delta GNDVI\)</span> +0.007), which are nearly identical to the stable True Not Mowed pixels. This confirms that the false positives did not experience a significant spectral change indicative of disturbance.</li>
+<li><strong>State Features (swir_after, ndii_after):</strong> The False Positives exhibit high SWIR reflectance (Median 2657) and very low NDII values (Median 0.004). These values are significantly different from the healthy background grass (<span class="math inline">\(SWIR\)</span> 2326, <span class="math inline">\(NDII\)</span> 0.134) but remarkably similar to the dry state of True Mowed areas (<span class="math inline">\(SWIR\)</span> 2734, <span class="math inline">\(NDII\)</span> 0.015).</li>
+</ul>
+<div id="fig-overprediction_analysis_boxplot" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-overprediction_analysis_boxplot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/overprediction_analysis_boxplot.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-overprediction_analysis_boxplot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;22: Boxplot comparing the distribution of hybrid features for True Mowed, Hybrid False Positives, and True Not Mowed pixels
+</figcaption>
+</figure>
+</div>
+</section>
+</section>
+</section>
+<section id="discussion" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Discussion</h1>
+<section id="interpretation-of-model-performance" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="interpretation-of-model-performance"><span class="header-section-number">4.1</span> Interpretation of Model performance</h2>
+<section id="algorithm-selection-and-complexity" class="level3" data-number="4.1.1">
+<h3 data-number="4.1.1" class="anchored" data-anchor-id="algorithm-selection-and-complexity"><span class="header-section-number">4.1.1</span> Algorithm Selection and Complexity</h3>
+<p>The quantitative evaluation showed that standard pixel-based machine learning algorithms are highly effective for mowing detection. The Tuned Support Vector Machine (SVM) achieved the highest F1 score (0.922) on the test set. This indicates that, when feature engineering is robust, complex deep learning architectures (such as convolutional neural networks), which are often resource-intensive and require vast amounts of training data, are not strictly necessary for this specific task.</p>
+<p>The SVM’s slight superiority over Random Forest and LightGBM suggests that the decision boundary between “mowed” and “not mowed” in the high-dimensional spectral space is well-defined, yet potentially non-linear. Although tree-based models (RF and LGBM) are generally more interpretable, the SVM’s ability to maximise the margin between classes enabled it to maintain a high recall rate (missing fewer events) without compromising precision on clean test data.</p>
+</section>
+<section id="superiority-of-moisture-sensitive-indices" class="level3" data-number="4.1.2">
+<h3 data-number="4.1.2" class="anchored" data-anchor-id="superiority-of-moisture-sensitive-indices"><span class="header-section-number">4.1.2</span> Superiority of Moisture-Sensitive Indices</h3>
+<p>Contrary to initial hypotheses, the results did not demonstrate the universal superiority of moisture-sensitive indices (NDII) over greenness indices (NDVI) in all configurations. Although the baseline Random Forest model performed significantly better with NDII (F1 score of 0.862) than with NDVI (F1 score of 0.810), this performance gap largely disappeared following hyperparameter tuning and when the other model types were tested.</p>
+<p>This suggests that, although the “moisture drop” signal (captured by NDII) is initially easier for a simple model to detect, a well-optimised classifier can extract the mowing signal equally well from the “chlorophyll loss” signal (captured by NDVI). &nbsp;This aligns with the findings of Andreatta et al., who emphasised the usefulness of SWIR bands but also noted the reliability of NDVI time series. For operational purposes, this implies flexibility: if SWIR bands are unavailable or unreliable, standard NDVI remains a viable alternative provided the model architecture is tuned appropriately <span class="citation" data-cites="andreatta2022">(<a href="#ref-andreatta2022" role="doc-biblioref">Andreatta et al. 2022</a>)</span>.</p>
+</section>
+<section id="importance-of-temporal-resolution-and-data-quality" class="level3" data-number="4.1.3">
+<h3 data-number="4.1.3" class="anchored" data-anchor-id="importance-of-temporal-resolution-and-data-quality"><span class="header-section-number">4.1.3</span> Importance of Temporal Resolution and Data Quality</h3>
+<p>The methodological experiment comparing “Strict Window” matching (3-8 days prior) versus “Flexible/Nearest” matching revealed a crucial operational constraint. The model performance dropped significantly when “Not Mowed” samples were derived from short temporal intervals (e.g., 2 days).</p>
+<p>This suggests that the model relies on detecting a deviation from expected growth rather than just a static state. By enforcing a larger temporal gap for the reference image, the training data forced the model to learn the spectral signature of natural growth (positive index change) while still keeping some samples showing relatively steady conditions. A mowing event (negative index change) then stands out as a clear anomaly against this growth trend. This implies that operational systems require a revisit rate of approximately 10 days to function reliably. While Sentinel-2 offers a 5-day revisit time, frequent cloud cover in Zurich often breaks this temporal chain, representing a significant limitation for optical-only systems.</p>
+<p>This project has shown that rigorous data preprocessing is as important as model selection. Without the strict temporal filtering, cloud masking, and geometric cleaning applied in this study, even the most sophisticated algorithm would fail to distinguish true events from environmental noise. The success of the workflow relied heavily on curating a clean, balanced training dataset where the physical signal of change was explicitly isolated from the background noise of stable vegetation.</p>
+</section>
+</section>
+<section id="operational-applicability-and-spatial-constraints" class="level2" data-number="4.2">
+<h2 data-number="4.2" class="anchored" data-anchor-id="operational-applicability-and-spatial-constraints"><span class="header-section-number">4.2</span> Operational Applicability and Spatial Constraints</h2>
+<section id="the-trade-off-between-metric-optimization-and-spatial-robustness" class="level3" data-number="4.2.1">
+<h3 data-number="4.2.1" class="anchored" data-anchor-id="the-trade-off-between-metric-optimization-and-spatial-robustness"><span class="header-section-number">4.2.1</span> The Trade-off Between Metric Optimization and Spatial Robustness</h3>
+<p>A critical finding of this study is the discrepancy between quantitative test metrics and qualitative spatial performance. While the “Hybrid” feature set (combining change vectors with absolute state features) achieved the highest F1-scores on the test set, it performed poorly when applied to full satellite scenes, generating significant over-prediction errors.</p>
+<p>This over-prediction was quantitatively confirmed by the sharp drop in Precision for the Mowing class in the full-scene application (dropping to ~0.16 for hybrid models). The spectral analysis of these false positives (Figure <a href="#fig-overprediction_analysis_boxplot" class="quarto-xref">Figure&nbsp;22</a>) showed that the main cause for this is most likely overfitting to static environmental noise. The disputed pixels exhibited no significant moisture change (<span class="math inline">\(\Delta NDII \approx 0\)</span>), meaning no mowing occurred. However, they possessed high absolute SWIR reflectance and low NDII values, which are spectral characteristics typical of bare soil or dry vegetation the model falsely associated with mowing.</p>
+<p>By including additional features (like swir_after and gndvi_diff), the model dimensionality increased, allowing it to learn faulty correlations. It effectively learned to classify “dry/bright surfaces” as mowed, even in the absence of a change signal. In the controlled environment of the test set, which consists of cleaner, selected samples, these features helped resolve edge cases. However, in the heterogeneous environment of a full airport scene, they acted as distractors. This illustrates a classic “Curse of Dimensionality” problem: adding features increased precision on the training distribution but reduced robustness on the out-of-distribution noise found in real-world application.</p>
+<p>Consequently, the simpler Single-Feature models (NDII- and NDVI-only), which rely exclusively on the physical change signal, proved to be superior for operational monitoring despite scoring slightly lower on standard metrics.</p>
+</section>
+<section id="geolocation-uncertainty-and-edge-effects" class="level3" data-number="4.2.2">
+<h3 data-number="4.2.2" class="anchored" data-anchor-id="geolocation-uncertainty-and-edge-effects"><span class="header-section-number">4.2.2</span> Geolocation Uncertainty and Edge Effects</h3>
+<p>The visual assessment of the full scenes revealed a systematic spatial offset between the model predictions and the ground truth polygons. While the model correctly identified the rough shape and size of the mowing events, the pixels were often shifted by pixel one or two units relative to the polygon masks.</p>
+<p>This disagreement is likely not a model failure but a result of inherent data limitations. The Sentinel-2 Level-2A product currently has a geometric uncertainty (RMSE) of roughly 12.5 meters (equals 1.25 pixels) <span class="citation" data-cites="sentinel2dqr2023">(<a href="#ref-sentinel2dqr2023" role="doc-biblioref">S2 MSI ESL Team 2023</a>)</span>. Meanwhile the ground truth data were digitalized from areas marked on papermaps by hand, adding to the uncertainty of accuracy. This misalignment artificially lowers the calculated pixel-wise performance metrics (creating false positives/negatives at polygon edges) and likely causes a performance plateau that cannot be overcome by better modeling. Buffering the ground truth polygons during sampling showed a small improvement in model metrics.</p>
+</section>
+</section>
+<section id="conclusion-and-outlook" class="level2" data-number="4.3">
+<h2 data-number="4.3" class="anchored" data-anchor-id="conclusion-and-outlook"><span class="header-section-number">4.3</span> Conclusion and Outlook</h2>
+<p>The objective of this project was to assess the feasibility of detecting mowing events at Zurich Airport using automated machine learning workflows on Sentinel-2 satellite imagery.</p>
+<p>The results confirm that a high-performance detection system (F1-score $$0.92) is achievable using open-source optical data. The study validated that standard machine learning algorithms, particularly the Support Vector Machine (SVM), are sufficient for this task. While moisture-sensitive indices (NDII) provide a stronger baseline signal than greenness indices (NDVI), optimized models perform comparably well with either. Most importantly, the investigation highlighted the importance of simplicity in feature choice. Although adding complex static features improved test scores, it introduced significant noise in real-world applications. The robust “change-only” approach (using ndii_diff) proved to be the most reliable method for operational use. At the same time the study showed that careful data collection and preprocessing (cloud masking, temporal filtering, geometric cleaning, etc.) are extremly important when working with optical remote sensing data. The quality of the results was driven less by the choice of algorithm complexity and more by the integrity of the input data.</p>
+<p>Despite these successes, the operational reliability of the system faces inherent environmental constraints. The reliance on optical imagery creates unavoidable data gaps due to cloud cover, which can exceed the critical 10-day detection window required to distinguish mowing from natural growth. Additionally, the geometric precision of Sentinel-2 limits the system’s ability to monitor small, fragmented edges with the high accuracy required for detailed biodiversity studies.</p>
+<p>To address these limitations and transition from a prototype to a fully operational tool, future work should focus on two main areas. First, as suggested by Reinermann et al., integrating Synthetic Aperture Radar (SAR) data from Sentinel-1 would effectively solve the cloud cover challenge <span class="citation" data-cites="reinermann2022">(<a href="#ref-reinermann2022" role="doc-biblioref">Reinermann et al. 2022</a>)</span>. Since Radar can penetrate clouds and is sensitive to surface roughness (texture) rather than just color, it provides a complementary signal that could resolve the ambiguities between dry soil and mowed grass.</p>
+<p>Second, the current pixel-based approach could be enhanced by incorporating spatial context. Moving towards Semantic Segmentation or Object-Based Image Analysis (OBIA) would allow the model to consider the status of surrounding pixels, ensuring more contiguous predictions and reducing salt-and-pepper noise. Alternatively, applying simple post-processing steps, such as morphological operations, could also help to smooth the final detection maps and improve spatial consistency.</p>
+</section>
+</section>
+<section id="statement-of-reproducibility" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> Statement of Reproducibility</h1>
+<p>All code developed for data processing, model training, and deployment in this project is fully available in the project’s <a href="https://github.com/klaveflo/airport-mowing-detection">GitHub</a> repository. While the specific ground truth data provided by Zurich Airport is confidential and cannot be publicly shared, the code structure allows for the reproduction of the workflow using similar datasets. The <a href="https://browser.dataspace.copernicus.eu/">satellite</a>, <a href="https://geo.zh.ch/">official survey and fire brigade responsibility area</a> data are all openly available on the corresponding websites.</p>
+<p>To ensure reproducibility, maintainability, and simple reusability, set seeds were used and the codebase was refactored into documented, modular functions. This prevents code duplication and allows specific steps, such as the temporal triplet generation or the model application to be reused independently. Key configuration variables and hard-to-tune parameters (e.g., temporal window sizes, cloud probability thresholds, features to use) are declared at the top of the notebooks to facilitate adaptation to new research questions.</p>
+<p>Project version control was managed via GitHub. All computational tasks, including data preprocessing and model training, were optimized to run on standard local hardware.</p>
+</section>
+<section id="sec-refs" class="level1" data-number="6">
+<h1 data-number="6"><span class="header-section-number">6</span> References</h1>
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-andreatta2022" class="csl-entry" role="listitem">
+Andreatta, Davide, Damiano Gianelle, Michele Scotton, Loris Vescovo, and Michele Dalponte. 2022. <span>“Detection of Grassland Mowing Frequency Using Time Series of Vegetation Indices from Sentinel-2 Imagery.”</span> <em>GIScience &amp; Remote Sensing</em> 59 (February): 481–500. <a href="https://doi.org/10.1080/15481603.2022.2036055">https://doi.org/10.1080/15481603.2022.2036055</a>.
+</div>
+<div id="ref-devroey2021" class="csl-entry" role="listitem">
+De Vroey, Mathilde, Julien Radoux, and Pierre Defourny. 2021. <span>“Grassland Mowing Detection Using Sentinel-1 Time Series: Potential and Limitations.”</span> <em>Remote Sensing</em> 13 (3). <a href="https://doi.org/10.3390/rs13030348">https://doi.org/10.3390/rs13030348</a>.
+</div>
+<div id="ref-devault2011" class="csl-entry" role="listitem">
+DeVault, Travis L., Jerrold L. Belant, Bradley F. Blackwell, and Thomas W. Seamans. 2011. <span>“Interspecific Variation in Wildlife Hazards to Aircraft: Implications for Airport Wildlife Management.”</span> <em>Wildlife Society Bulletin</em> 35 (4): 394–402. https://doi.org/<a href="https://doi.org/10.1002/wsb.75">https://doi.org/10.1002/wsb.75</a>.
+</div>
+<div id="ref-drusch2012" class="csl-entry" role="listitem">
+Drusch, M., U. Del Bello, S. Carlier, O. Colin, V. Fernandez, F. Gascon, B. Hoersch, et al. 2012. <span>“Sentinel-2: ESA’s Optical High-Resolution Mission for GMES Operational Services.”</span> <em>Remote Sensing of Environment</em> 120: 25–36. https://doi.org/<a href="https://doi.org/10.1016/j.rse.2011.11.026">https://doi.org/10.1016/j.rse.2011.11.026</a>.
+</div>
+<div id="ref-zrh_cover_img" class="csl-entry" role="listitem">
+Flughafen Zürich AG. n.d. <span>“ZRH.”</span> n.d. <a href="https://newsroom.flughafen-zuerich.ch/asset/1041879/zrh-rd-b007-0038">https://newsroom.flughafen-zuerich.ch/asset/1041879/zrh-rd-b007-0038</a>.
+</div>
+<div id="ref-garioud2019" class="csl-entry" role="listitem">
+Garioud, Anatol, Sébastien Giordano, Silvia Valero, and Clément Mallet. 2019. <span>“Challenges in Grassland Mowing Event Detection with Multimodal Sentinel Images.”</span> In <em>2019 10th International Workshop on the Analysis of Multitemporal Remote Sensing Images (MultiTemp)</em>, 1–4. <a href="https://doi.org/10.1109/Multi-Temp.2019.8866914">https://doi.org/10.1109/Multi-Temp.2019.8866914</a>.
+</div>
+<div id="ref-zh_geodata_2025" class="csl-entry" role="listitem">
+Kanton Zürich. 2017. <span>“<span>Amtliche Vermessung</span>.”</span> Geoportal Kanton Z<span>ü</span>rich. <a href="https://geo.zh.ch">https://geo.zh.ch</a>.
+</div>
+<div id="ref-komisarenko2022" class="csl-entry" role="listitem">
+Komisarenko, Viacheslav, Kaupo Voormansik, Radwa Elshawi, and Sherif Sakr. 2022. <span>“Exploiting Time Series of <span>Sentinel</span>-1 and <span>Sentinel</span>-2 to Detect Grassland Mowing Events Using Deep Learning with Reject Region.”</span> <em>Scientific Reports</em> 12 (1): 983. <a href="https://doi.org/10.1038/s41598-022-04932-6">https://doi.org/10.1038/s41598-022-04932-6</a>.
+</div>
+<div id="ref-pettorelli2005" class="csl-entry" role="listitem">
+Pettorelli, Nathalie, Jon Olav Vik, Atle Mysterud, Jean-Michel Gaillard, Compton J. Tucker, and Nils Chr. Stenseth. 2005. <span>“Using the Satellite-Derived <span>NDVI</span> to Assess Ecological Responses to Environmental Change.”</span> <em>Trends in Ecology &amp; Evolution</em> 20 (9): 503–10. <a href="https://doi.org/10.1016/j.tree.2005.05.011">https://doi.org/10.1016/j.tree.2005.05.011</a>.
+</div>
+<div id="ref-reinermann2022" class="csl-entry" role="listitem">
+Reinermann, Sophie, Ursula Gessner, Sarah Asam, Tobias Ullmann, Anne Schucknecht, and Claudia Kuenzer. 2022. <span>“Detection of Grassland Mowing Events for Germany by Combining Sentinel-1 and Sentinel-2 Time Series.”</span> <em>Remote Sensing</em> 14 (7). <a href="https://doi.org/10.3390/rs14071647">https://doi.org/10.3390/rs14071647</a>.
+</div>
+<div id="ref-sentinel2dqr2023" class="csl-entry" role="listitem">
+S2 MSI ESL Team. 2023. <span>“Data Quality Report: Sentinel-2 L1C MSI – March 2023.”</span> Issue 85.0 OMPC.CS.DQR.01.02-2023. European Space Agency (ESA). <a href="https://sentinels.copernicus.eu/documents/247904/4868341/OMPC.CS.DQR.001.02-2023+-+i85r0+-+MSI+L1C+DQR+March+2023.pdf">https://sentinels.copernicus.eu/documents/247904/4868341/OMPC.CS.DQR.001.02-2023+-+i85r0+-+MSI+L1C+DQR+March+2023.pdf</a>.
+</div>
+</div>
+</section>
+<section id="appendix" class="level1 unnumbered">
+<h1 class="unnumbered">Appendix</h1>
+<section id="appendix-a-full-model-evaluation-results" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="appendix-a-full-model-evaluation-results">Appendix A: Full Model Evaluation Results</h2>
+<p>This appendix contains the additional Confusion Matrices and ROC Curves for all tested model configurations (Baseline/Tuned for RF, LGBM, and SVM across four feature sets) that were not already shown in the results section.</p>
+<div id="fig-tuned_RF_NDII" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tuned_RF_NDII-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/models/tuned_rf_ndii_evaluation.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tuned_RF_NDII-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;23: Confusion Matrix (left) and ROC-Curve (right) for the tuned Random Forest model using the ndii_diff feature
+</figcaption>
+</figure>
+</div>
+<div id="fig-baseline_LGBM_NDII" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-baseline_LGBM_NDII-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/models/baseline_lgbm_ndii_evaluation.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-baseline_LGBM_NDII-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;24: Confusion Matrix (left) and ROC-Curve (right) for the baseline LGBM model using the ndii_diff feature
+</figcaption>
+</figure>
+</div>
+<div id="fig-tuned_LGBM_NDII" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tuned_LGBM_NDII-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/models/tuned_lgbm_ndii_evaluation.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tuned_LGBM_NDII-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;25: Confusion Matrix (left) and ROC-Curve (right) for the tuned LGBM model using the ndii_diff feature
+</figcaption>
+</figure>
+</div>
+<div id="fig-baseline_SVM_NDII" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-baseline_SVM_NDII-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/models/baseline_svm_ndii_evaluation.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-baseline_SVM_NDII-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;26: Confusion Matrix (left) and ROC-Curve (right) for the baseline SVM model using the ndii_diff feature
+</figcaption>
+</figure>
+</div>
+<div id="fig-baseline_RF_NDVI" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-baseline_RF_NDVI-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/models/baseline_rf_ndvi_evaluation.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-baseline_RF_NDVI-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;27: Confusion Matrix (left) and ROC-Curve (right) for the baseline Random Forest model using the ndvi_diff feature
+</figcaption>
+</figure>
+</div>
+<div id="fig-tuned_RF_NDVI" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tuned_RF_NDVI-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/models/tuned_rf_ndvi_evaluation.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tuned_RF_NDVI-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;28: Confusion Matrix (left) and ROC-Curve (right) for the tuned Random Forest model using the ndvi_diff feature
+</figcaption>
+</figure>
+</div>
+<div id="fig-baseline_LGBM_NDVI" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-baseline_LGBM_NDVI-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/models/baseline_lgbm_ndvi_evaluation.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-baseline_LGBM_NDVI-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;29: Confusion Matrix (left) and ROC-Curve (right) for the baseline LGBM model using the ndvi_diff feature
+</figcaption>
+</figure>
+</div>
+<div id="fig-tuned_LGBM_NDVI" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tuned_LGBM_NDVI-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/models/tuned_lgbm_ndvi_evaluation.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tuned_LGBM_NDVI-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;30: Confusion Matrix (left) and ROC-Curve (right) for the tuned LGBM model using the ndvi_diff feature
+</figcaption>
+</figure>
+</div>
+<div id="fig-baseline_SVM_NDVI" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-baseline_SVM_NDVI-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/models/baseline_svm_ndvi_evaluation.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-baseline_SVM_NDVI-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;31: Confusion Matrix (left) and ROC-Curve (right) for the baseline SVM model using the ndvi_diff feature
+</figcaption>
+</figure>
+</div>
+<div id="fig-tuned_SVM_NDVI" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tuned_SVM_NDVI-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/models/tuned_svm_ndvi_evaluation.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tuned_SVM_NDVI-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;32: Confusion Matrix (left) and ROC-Curve (right) for the tuned SVM model using the ndvi_diff feature
+</figcaption>
+</figure>
+</div>
+<div id="fig-baseline_RF_MULTI" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-baseline_RF_MULTI-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/models/baseline_rf_multi_evaluation.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-baseline_RF_MULTI-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;33: Confusion Matrix (left) and ROC-Curve (right) for the baseline Random Forest model using the multi-feature set
+</figcaption>
+</figure>
+</div>
+<div id="fig-tuned_RF_MULTI" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tuned_RF_MULTI-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/models/tuned_rf_multi_evaluation.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tuned_RF_MULTI-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;34: Confusion Matrix (left) and ROC-Curve (right) for the tuned Random Forest model using the multi-feature set
+</figcaption>
+</figure>
+</div>
+<div id="fig-baseline_LGBM_MULTI" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-baseline_LGBM_MULTI-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/models/baseline_lgbm_multi_evaluation.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-baseline_LGBM_MULTI-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;35: Confusion Matrix (left) and ROC-Curve (right) for the baseline LGBM model using the multi-feature set
+</figcaption>
+</figure>
+</div>
+<div id="fig-tuned_LGBM_MULTI" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tuned_LGBM_MULTI-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/models/tuned_lgbm_multi_evaluation.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tuned_LGBM_MULTI-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;36: Confusion Matrix (left) and ROC-Curve (right) for the tuned LGBM model using the multi-feature set
+</figcaption>
+</figure>
+</div>
+<div id="fig-baseline_SVM_MULTI" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-baseline_SVM_MULTI-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/models/baseline_svm_multi_evaluation.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-baseline_SVM_MULTI-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;37: Confusion Matrix (left) and ROC-Curve (right) for the baseline SVM model using the multi-feature set
+</figcaption>
+</figure>
+</div>
+<div id="fig-tuned_SVM_MULTI" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tuned_SVM_MULTI-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/models/tuned_svm_multi_evaluation.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tuned_SVM_MULTI-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;38: Confusion Matrix (left) and ROC-Curve (right) for the tuned SVM model using the multi-feature set
+</figcaption>
+</figure>
+</div>
+<div id="fig-baseline_RF_HYBRID" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-baseline_RF_HYBRID-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/models/baseline_rf_hybrid_evaluation.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-baseline_RF_HYBRID-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;39: Confusion Matrix (left) and ROC-Curve (right) for the baseline Random Forest model using the hybrid-feature set
+</figcaption>
+</figure>
+</div>
+<div id="fig-tuned_RF_HYBRID" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tuned_RF_HYBRID-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/models/tuned_rf_hybrid_evaluation.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tuned_RF_HYBRID-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;40: Confusion Matrix (left) and ROC-Curve (right) for the tuned Random Forest model using the hybrid-feature set
+</figcaption>
+</figure>
+</div>
+<div id="fig-baseline_LGBM_HYBRID" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-baseline_LGBM_HYBRID-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/models/baseline_lgbm_hybrid_evaluation.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-baseline_LGBM_HYBRID-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;41: Confusion Matrix (left) and ROC-Curve (right) for the baseline LGBM model using the hybrid-feature set
+</figcaption>
+</figure>
+</div>
+<div id="fig-baseline_SVM_HYBRID" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-baseline_SVM_HYBRID-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/models/baseline_svm_hybrid_evaluation.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-baseline_SVM_HYBRID-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;42: Confusion Matrix (left) and ROC-Curve (right) for the baseline SVM model using the hybrid-feature set
+</figcaption>
+</figure>
+</div>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
