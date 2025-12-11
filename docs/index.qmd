@@ -24,6 +24,7 @@ author:
 format: 
   zhaw-lsfm-typst: default
   zhaw-lsfm-html:
+    embed-resources: true
     echo: false
     toc: true
     toc-depth: 3
