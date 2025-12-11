@@ -23,8 +23,7 @@ author:
   - Florian Klaver
 format: 
   zhaw-lsfm-typst: default
-  html:
-    theme: cosmo
+  zhaw-lsfm-html:
     echo: false
     toc: true
     toc-depth: 3
