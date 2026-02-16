@@ -225,10 +225,10 @@ This strategy constructs two distinct classes of samples for every confirmed eve
 - **Postive Samples (Mowing):** These samples represent a true mowing event. They are derived from the spectral change between the pre-event image ($t_{n-1}$) and the post-event image ($t_{n}$). This captures the abrupt removal of biomass.   
 - **Negative Samples (Not Mowed):** These samples represent "normal" conditions. They are derived from the change between the reference image ($t_{n-2}$) and the pre-event image ($t_{n-1}$). This comparison captures natural growth or stable conditions over a larger time window, acting as a "no-mowing" example for the model.
 
-To generate these samples, three specific Sentinel-2 images were identified for each event based on temporal proximity and cloud-free conditions: 
+To generate these samples, three specific Sentinel-2 images were identified for each event based on temporal proximity: 
 
 1. **$t_{n}$ (Post-event):** The first image 1 to 7 days after the event.  
-2. **$t_{n-1}$ (Pre-event):** The last clear image 3 to 8 days before the event, using a safety buffer to avoid faulty dates.
+2. **$t_{n-1}$ (Pre-event):** The last image 3 to 8 days before the event, using a safety buffer to avoid faulty dates.
 3. **$t_{n-2}$ (Reference):** Image 9 to 20 days before the event.  
 
 **Justification for these Temporal Windows:**  
@@ -394,7 +394,7 @@ To ensure a fair visual evaluation, a specific temporal pair of Sentinel-2 image
 
 - **Before Image:** August 07, 2020
 - **After Image:** August 12, 2020
-- **Target Mowing Events:** Ground truth records indicate mowing occurred on July 10 and July 11, 2020.
+- **Target Mowing Events:** Ground truth records indicate mowing occurred on August 10 and August 11, 2020.
 
 ### Application Pipeline
 The selected models were applied to this image pair using the following pipeline:
